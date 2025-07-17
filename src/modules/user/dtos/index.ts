@@ -1,4 +1,3 @@
-import { CreateUserDto } from "./create-user.dto";
-import { UpdateUserDto } from "./update-user.dto";
-
-export { CreateUserDto, UpdateUserDto };
+export * from "./user.dto";
+export * from "./create-user.dto";
+export * from "./update-user.dto";

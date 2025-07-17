@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { User } from "./user.entity";
-import { Repository } from "../../shared/repositories/Repository";
-import { IUserRepository } from "./interfaces/user-repository.interface";
+import { User } from "../user.entity";
+import { Repository } from "../../../shared/repositories/Repository";
+import { IUserRepository } from "../interfaces/user-repository.interface";
 
 export class UserRepository
   extends Repository<User>
