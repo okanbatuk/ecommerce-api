@@ -1,0 +1,21 @@
+import { PrismaClient } from "@prisma/client";
+import { User } from "./user.entity";
+import { Repository } from "../../shared/repositories/Repository";
+import { IUserRepository } from "./interfaces/user-repository.interface";
+
+export class UserRepository
+  extends Repository<User>
+  implements IUserRepository
+{
+  protected readonly modelName = "user" as const;
+
+  constructor(prisma: PrismaClient) {
+    super(prisma);
+  }
+  async findByUsername(username: string): Promise<User | null> {
+    return this.delegate.findUnique({ where: { username } });
+  }
+  async findByEmail(email: string): Promise<User | null> {
+    return this.delegate.findUnique({ where: { email } });
+  }
+}
