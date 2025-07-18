@@ -4,6 +4,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { ResponseCode } from "../types/response-code";
 import { ApiResponse } from "../types/api-response";
+import { sendReply } from "../utils/send-response";
 
 export default fp(async (app: FastifyInstance) => {
   app.setErrorHandler((error, req, reply) => {
@@ -24,7 +25,7 @@ export default fp(async (app: FastifyInstance) => {
           responseCode = ResponseCode.NOT_FOUND;
           errors = ["Record not found"];
           break;
-        
+
         default:
           errors = [error.message];
           break;
@@ -36,13 +37,6 @@ export default fp(async (app: FastifyInstance) => {
       statusCode = 400;
       responseCode = ResponseCode.BAD_REQUEST;
       errors = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
-    }
-
-    // Fastify validation errors
-    else if (error.validation) {
-      statusCode = 400;
-      responseCode = ResponseCode.BAD_REQUEST;
-      errors = error.validation.map((e: any) => e.message);
     }
 
     // 404 Route not found
@@ -57,14 +51,13 @@ export default fp(async (app: FastifyInstance) => {
       errors = [error.message || "An unexpected error occurred"];
     }
 
-    const payload: ApiResponse<null> = {
-      success: statusCode < 400,
+    return sendReply<ApiResponse>(
+      reply,
       statusCode,
       responseCode,
-      message: errors[0] || "An error occurred",
-      errors,
-    };
-
-    reply.status(statusCode).send(payload);
+      undefined,
+      errors[0] || "An error occurred",
+      errors
+    );
   });
 });

@@ -1,9 +1,10 @@
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
-import fastifyCookie from "@fastify/cookie";
 import fastifyJwt from "@fastify/jwt";
+import fastifyCookie from "@fastify/cookie";
 import { FastifyInstance } from "fastify";
 import { config } from "./env";
+import validationHooks from "../shared/plugins/validation-hooks";
 
 export async function registerCommonPlugins(app: FastifyInstance) {
   await app.register(cors, {
@@ -21,4 +22,5 @@ export async function registerCommonPlugins(app: FastifyInstance) {
       signed: false,
     },
   });
+  await app.register(validationHooks);
 }
