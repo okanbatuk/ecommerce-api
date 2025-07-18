@@ -3,6 +3,7 @@ import { CreateUserDto, UpdateUserDto } from "../dtos";
 import { UserServiceFactory } from "../factories/user-service.factory";
 import { sendReply } from "../../../shared/utils/send-response";
 import { ResponseCode } from "../../../shared/types/response-code";
+import { Prisma } from "@prisma/client";
 
 export class UserController {
   private readonly userService = UserServiceFactory.getInstance();
@@ -25,23 +26,40 @@ export class UserController {
         );
   };
 
-  /* GET /users?username=foo&email=bar@x.com  */
+  /* GET /users?username=foo&email=bar@x.com&limit=20&offset=0 */
   search = async (
-    req: FastifyRequest<{ Querystring: { username?: string; email?: string } }>,
+    req: FastifyRequest<{
+      Querystring: {
+        username?: string;
+        email?: string;
+        limit?: number;
+        offset?: number;
+      };
+    }>,
     res: FastifyReply
   ): Promise<FastifyReply> => {
-    const { username, email } = req.query;
-    let user = null;
+    const { username, email, limit = 20, offset = 0 } = req.query;
 
-    if (username) {
-      user = await this.userService.getUserByUsername(username);
-    } else if (email) {
-      user = await this.userService.getUserByEmail(email);
+    const where: Prisma.UserWhereInput = {
+      ...(username && {
+        username: { contains: username, mode: "insensitive" },
+      }),
+      ...(email && { email: { contains: email, mode: "insensitive" } }),
+    };
+
+    if (Object.keys(where).length === 0) {
+      const users = await this.userService.getAllUsers({ limit, offset });
+      return sendReply(
+        res,
+        200,
+        ResponseCode.OK,
+        users,
+        "All users successfully retrieved"
+      );
     }
 
-    return user
-      ? sendReply(res, 200, ResponseCode.OK, user, "User found")
-      : sendReply(res, 404, ResponseCode.NOT_FOUND, null, "User not found");
+    const user = await this.userService.getUser(where);
+    return sendReply(res, 200, ResponseCode.OK, user, "User found");
   };
 
   /* POST /users */
@@ -53,7 +71,7 @@ export class UserController {
     return sendReply(res, 201, ResponseCode.CREATED, user, "User created");
   };
 
-  /* POST /users/:id */
+  /* PUT /users/:id */
   update = async (
     req: FastifyRequest<{ Params: { id: string }; Body: UpdateUserDto }>,
     res: FastifyReply

@@ -1,5 +1,5 @@
 import { User } from "../user.entity";
-import { IRepository } from "../../../shared/interfaces/IRepository";
+import { IRepository } from "../../../shared/interfaces/repository.interface";
 
 export interface IUserRepository extends IRepository<User> {
   findByUsername(username: string): Promise<User | null>;

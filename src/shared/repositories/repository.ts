@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import { IRepository } from "../interfaces/IRepository";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { IRepository } from "../interfaces/repository.interface";
 import { CreateUserDto, UpdateUserDto } from "../../modules/user/dtos";
 
 export abstract class Repository<T> implements IRepository<T> {
@@ -11,8 +11,21 @@ export abstract class Repository<T> implements IRepository<T> {
     return this.prisma[this.modelName] as any;
   }
 
-  async findAll(): Promise<T[]> {
-    return this.delegate.findMany();
+  async findAll({
+    limit,
+    offset,
+  }: {
+    limit: number;
+    offset: number;
+  }): Promise<T[]> {
+    return this.delegate.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: "desc" },
+    });
+  }
+  async findOne(where: Prisma.UserWhereInput): Promise<T | null> {
+    return this.delegate.findFirst({ where });
   }
   async findById(id: string): Promise<T | null> {
     return this.delegate.findUnique({ where: { id } });
