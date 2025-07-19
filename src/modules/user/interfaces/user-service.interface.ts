@@ -1,4 +1,4 @@
-import { UserDto } from "../dtos";
+import { UserDto } from "../dtos/user.dto";
 import { CreateUserInput, UpdateUserInput } from "../schemas";
 
 export interface IUserService {
@@ -8,10 +8,7 @@ export interface IUserService {
   }: {
     limit: number;
     offset: number;
-  }): Promise<UserDto[] | null>;
-  getUserById(id: string): Promise<UserDto | null>;
-  getUserByUsername(username: string): Promise<UserDto | null>;
-  getUserByEmail(email: string): Promise<UserDto | null>;
+  }): Promise<UserDto[] | undefined>;
   createUser(data: CreateUserInput): Promise<UserDto>;
   updateUser(id: string, data: UpdateUserInput): Promise<UserDto>;
   deleteUser(id: string): Promise<void>;

@@ -1,11 +1,15 @@
 import { Prisma } from "@prisma/client";
+import { User } from "../user.entity";
+import { UserDto } from "../dtos/user.dto";
 import { UserMapper } from "../mappers/user.mapper";
-import { CreateUserDto, UpdateUserDto, UserDto } from "../dtos";
+import { CreateUserInput, UpdateUserInput } from "../schemas";
 import { IUserService } from "../interfaces/user-service.interface";
 import { IUserRepository } from "../interfaces/user-repository.interface";
 
 export class UserService implements IUserService {
   constructor(private readonly userRepository: IUserRepository) {}
+
+  private toDto = (u: User | null) => (u ? UserMapper.toDto(u) : undefined);
 
   async getAllUsers({
     limit,
@@ -13,38 +17,24 @@ export class UserService implements IUserService {
   }: {
     limit: number;
     offset: number;
-  }): Promise<UserDto[] | null> {
+  }): Promise<UserDto[] | undefined> {
     const users = await this.userRepository.findAll({ limit, offset });
-    return users.map((data) => UserMapper.toDto(data));
+    return users.map(this.toDto);
   }
 
-  async getUser(where: Prisma.UserWhereInput): Promise<UserDto | null> {
+  async getUser(where: Prisma.UserWhereInput): Promise<UserDto | undefined> {
     const user = await this.userRepository.findOne(where);
-    return user ? UserMapper.toDto(user) : null;
+    return this.toDto(user);
   }
 
-  async getUserById(id: string): Promise<UserDto | null> {
-    const user = await this.userRepository.findById(id);
-    return user ? UserMapper.toDto(user) : null;
-  }
-
-  async getUserByUsername(username: string): Promise<UserDto | null> {
-    const user = await this.userRepository.findByUsername(username);
-    return user ? UserMapper.toDto(user) : null;
-  }
-
-  async getUserByEmail(email: string): Promise<UserDto | null> {
-    const user = await this.userRepository.findByEmail(email);
-    return user ? UserMapper.toDto(user) : null;
-  }
-  async createUser(data: CreateUserDto): Promise<UserDto> {
+  async createUser(data: CreateUserInput): Promise<UserDto> {
     const user = await this.userRepository.create(data);
-    return UserMapper.toDto(user);
+    return this.toDto(user);
   }
 
-  async updateUser(id: string, data: UpdateUserDto): Promise<UserDto> {
+  async updateUser(id: string, data: UpdateUserInput): Promise<UserDto> {
     const user = await this.userRepository.update(id, data);
-    return UserMapper.toDto(user);
+    return this.toDto(user);
   }
 
   async deleteUser(id: string): Promise<void> {

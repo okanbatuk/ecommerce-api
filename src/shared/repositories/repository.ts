@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { IRepository } from "../interfaces/repository.interface";
-import { CreateUserDto, UpdateUserDto } from "../../modules/user/dtos";
+import { CreateUserInput, UpdateUserInput } from "../../modules/user/schemas";
 
 export abstract class Repository<T> implements IRepository<T> {
   protected abstract readonly modelName: keyof PrismaClient;
@@ -30,10 +30,10 @@ export abstract class Repository<T> implements IRepository<T> {
   async findById(id: string): Promise<T | null> {
     return this.delegate.findUnique({ where: { id } });
   }
-  async create(data: CreateUserDto): Promise<T> {
+  async create(data: CreateUserInput): Promise<T> {
     return this.delegate.create({ data });
   }
-  async update(id: string, data: UpdateUserDto): Promise<T> {
+  async update(id: string, data: UpdateUserInput): Promise<T> {
     return this.delegate.update({ where: { id }, data });
   }
   async delete(id: string): Promise<void> {

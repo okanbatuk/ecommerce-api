@@ -1,6 +1,4 @@
 import { z } from "zod";
-import fp from "fastify-plugin";
-import zodToJsonSchema from "zod-to-json-schema";
 
 export const updateUserSchema = z
   .object({
@@ -14,7 +12,4 @@ export const updateUserSchema = z
     message: "At least one field must be provided for update",
   });
 
-export const updateUserJsonSchema = zodToJsonSchema(updateUserSchema, {
-  target: "jsonSchema7",
-});
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

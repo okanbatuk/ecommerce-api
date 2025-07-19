@@ -1,5 +1,4 @@
 import { z } from "zod";
-import zodToJsonSchema from "zod-to-json-schema";
 
 export const createUserSchema = z
   .object({
@@ -32,5 +31,4 @@ export const createUserSchema = z
   })
   .strict();
 
-export const createUserJsonSchema = zodToJsonSchema(createUserSchema);
 export type CreateUserInput = z.infer<typeof createUserSchema>;
