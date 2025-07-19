@@ -1,12 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from "../controllers/user.controller";
-import { createUserJsonSchema, updateUserJsonSchema } from "../schemas";
+import { updatePasswordJsonSchema, updateUserJsonSchema } from "../schemas";
 import { idParamJsonSchema } from "../../../shared/validations/id-param.schema";
 
 export default async function userRoutes(fastify: FastifyInstance) {
-  const ctrl = new UserController();
+  const userCtrl = new UserController();
 
-  fastify.get("/", ctrl.search);
+  fastify.get("/", userCtrl.search);
 
   fastify.get(
     "/:id",
@@ -15,19 +15,29 @@ export default async function userRoutes(fastify: FastifyInstance) {
         params: idParamJsonSchema,
       },
     },
-    ctrl.getById
+    userCtrl.getById
   );
-
-  fastify.post("/", ctrl.create);
 
   fastify.patch(
     "/:id",
     {
       schema: {
         params: idParamJsonSchema,
+        body: updateUserJsonSchema,
       },
     },
-    ctrl.update
+    userCtrl.update
+  );
+
+  fastify.patch(
+    "/:id/password",
+    {
+      schema: {
+        params: idParamJsonSchema,
+        body: updatePasswordJsonSchema,
+      },
+    },
+    userCtrl.updatePassword
   );
 
   fastify.delete(
@@ -37,6 +47,6 @@ export default async function userRoutes(fastify: FastifyInstance) {
         params: idParamJsonSchema,
       },
     },
-    ctrl.remove
+    userCtrl.remove
   );
 }

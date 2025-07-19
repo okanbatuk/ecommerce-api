@@ -1,9 +1,11 @@
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import fastifyJwt from "@fastify/jwt";
-import fastifyCookie from "@fastify/cookie";
 import { FastifyInstance } from "fastify";
-import { config } from "./env";
+import fastifyCookie from "@fastify/cookie";
+import fastifySwagger from "@fastify/swagger";
+import fastifySwaggerUi from "@fastify/swagger-ui";
+import { config } from "./env.config";
 import validationHooks from "../shared/plugins/validation-hooks";
 
 export async function registerCommonPlugins(app: FastifyInstance) {
@@ -23,4 +25,28 @@ export async function registerCommonPlugins(app: FastifyInstance) {
     },
   });
   await app.register(validationHooks);
+
+  await app.register(fastifySwagger, {
+    openapi: {
+      info: {
+        title: "Fastify API",
+        description: "Fastify API documentation",
+        version: "0.1.0",
+      },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
+        },
+      },
+    },
+  });
+
+  await app.register(fastifySwaggerUi, {
+    routePrefix: "/docs",
+    uiConfig: { docExpansion: "list", deepLinking: false },
+  });
 }

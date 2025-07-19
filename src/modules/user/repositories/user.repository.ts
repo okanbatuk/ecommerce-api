@@ -24,4 +24,10 @@ export class UserRepository
       },
     });
   }
+  async updatePassword(id: string, password: string): Promise<void> {
+    await this.delegate.update({
+      where: { id },
+      data: { password },
+    });
+  }
 }

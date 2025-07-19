@@ -1,6 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { UserDto } from "../dtos/user.dto";
-import { CreateUserInput, UpdateUserInput } from "../schemas";
+import {
+  CreateUserInput,
+  UpdatePasswordInput,
+  UpdateUserInput,
+} from "../schemas";
 
 export interface IUserService {
   getAllUsers({
@@ -13,5 +17,6 @@ export interface IUserService {
   getUser(where: Prisma.UserWhereInput): Promise<UserDto>;
   createUser(data: CreateUserInput): Promise<UserDto>;
   updateUser(id: string, data: UpdateUserInput): Promise<UserDto>;
+  updatePassword(id: string, data: UpdatePasswordInput): Promise<void>;
   deleteUser(id: string): Promise<void>;
 }

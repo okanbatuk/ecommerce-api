@@ -1,6 +1,6 @@
 import Fastify from "fastify";
+import { registerRoutes } from "./config/routes.config";
 import { registerCommonPlugins } from "./config/plugin";
-import userRoutes from "./modules/user/routes/user.routes";
 import errorHandlerPlugin from "./shared/plugins/error-handler.plugin";
 
 export async function buildApp() {
@@ -8,7 +8,7 @@ export async function buildApp() {
 
   await registerCommonPlugins(app);
   await app.register(errorHandlerPlugin);
-  await app.register(userRoutes, { prefix: "/users" });
+  await registerRoutes(app);
 
   return app;
 }

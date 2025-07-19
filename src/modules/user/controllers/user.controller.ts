@@ -1,10 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { UserDto } from "../dtos/user.dto";
-import { UpdateUserInput } from "../schemas";
+import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
 import { sendReply } from "../../../shared/utils/send-response";
 import { ResponseCode } from "../../../shared/types/response-code";
 import { UserServiceFactory } from "../factories/user-service.factory";
+import { AuthServiceFactory } from "../../auth/factories/auth-service.factory";
 
 const MSG = {
   NOT_FOUND: "User not found",
@@ -17,6 +18,7 @@ const MSG = {
 
 export class UserController {
   private readonly userService = UserServiceFactory.getInstance();
+  private readonly authService = AuthServiceFactory.getInstance();
 
   private async assertUserExists(id: string): Promise<UserDto> {
     const user = await this.userService.getUser({ id });
@@ -68,7 +70,7 @@ export class UserController {
     );
   };
 
-  /* PUT /users/:id */
+  /* PATCH /users/:id */
   update = async (
     req: FastifyRequest<{ Params: { id: string }; Body: UpdateUserInput }>,
     res: FastifyReply
@@ -80,6 +82,17 @@ export class UserController {
       req.body
     );
     return sendReply(res, 200, ResponseCode.OK, updatedUser, MSG.UPDATED);
+  };
+
+  /* PATCH /users/:id/password  */
+  updatePassword = async (
+    req: FastifyRequest<{ Params: { id: string }; Body: UpdatePasswordInput }>,
+    res: FastifyReply
+  ): Promise<void> => {
+    await this.assertUserExists(req.params.id);
+    await this.userService.updatePassword(req.params.id, req.body);
+    await this.authService.revokeAll(req.params.id);
+    return sendReply(res, 200, ResponseCode.OK, null, MSG.UPDATED);
   };
 
   /* DELETE /users/:id */
