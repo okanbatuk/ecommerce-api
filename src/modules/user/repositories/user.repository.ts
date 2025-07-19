@@ -13,7 +13,8 @@ export class UserRepository
   constructor(prisma: PrismaClient) {
     super(prisma);
   }
-  async findByUsernameOrEmail(identifier: string): Promise<User | null> {
+
+  async findByEmailOrUsername(identifier: string): Promise<User | null> {
     return this.delegate.findFirst({
       where: {
         OR: [
@@ -21,16 +22,6 @@ export class UserRepository
           { email: caseInsensitive(identifier) },
         ],
       },
-    });
-  }
-  async findByUsername(username: string): Promise<User | null> {
-    return this.delegate.findUnique({
-      where: { username: caseInsensitive(username) },
-    });
-  }
-  async findByEmail(email: string): Promise<User | null> {
-    return this.delegate.findUnique({
-      where: { email: caseInsensitive(email) },
     });
   }
 }

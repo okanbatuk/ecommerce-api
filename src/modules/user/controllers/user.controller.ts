@@ -2,7 +2,6 @@ import { Prisma } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { UserDto } from "../dtos/user.dto";
 import { UpdateUserInput } from "../schemas";
-import { NotFoundError } from "../../../shared/exceptions";
 import { sendReply } from "../../../shared/utils/send-response";
 import { ResponseCode } from "../../../shared/types/response-code";
 import { UserServiceFactory } from "../factories/user-service.factory";
@@ -21,7 +20,6 @@ export class UserController {
 
   private async assertUserExists(id: string): Promise<UserDto> {
     const user = await this.userService.getUser({ id });
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
     return user;
   }
   /* GET /users/:id */
@@ -30,7 +28,6 @@ export class UserController {
     reply: FastifyReply
   ): Promise<void> => {
     const user = await this.assertUserExists(req.params.id);
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
 
     return sendReply(reply, 200, ResponseCode.OK, user, MSG.FOUND);
   };
@@ -62,9 +59,6 @@ export class UserController {
       ? await this.userService.getUser(where)
       : await this.userService.getAllUsers({ limit, offset });
 
-    if (!result || (Array.isArray(result) && result.length === 0))
-      throw new NotFoundError(hasFilter ? MSG.NOT_FOUND : MSG.NO_USERS);
-
     return sendReply(
       res,
       200,
@@ -79,8 +73,7 @@ export class UserController {
     req: FastifyRequest<{ Params: { id: string }; Body: UpdateUserInput }>,
     res: FastifyReply
   ): Promise<void> => {
-    const user = await this.assertUserExists(req.params.id);
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
+    await this.assertUserExists(req.params.id);
 
     const updatedUser = await this.userService.updateUser(
       req.params.id,
@@ -94,8 +87,7 @@ export class UserController {
     req: FastifyRequest<{ Params: { id: string } }>,
     res: FastifyReply
   ): Promise<void> => {
-    const user = await this.assertUserExists(req.params.id);
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
+    await this.assertUserExists(req.params.id);
 
     await this.userService.deleteUser(req.params.id);
     return sendReply(res, 204, ResponseCode.NO_CONTENT, null, MSG.DELETED);

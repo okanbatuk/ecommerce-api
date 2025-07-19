@@ -5,11 +5,17 @@ import { UserMapper } from "../mappers/user.mapper";
 import { CreateUserInput, UpdateUserInput } from "../schemas";
 import { IUserService } from "../interfaces/user-service.interface";
 import { IUserRepository } from "../interfaces/user-repository.interface";
+import { NotFoundError } from "../../../shared/exceptions";
+
+const MSG = {
+  NOT_FOUND: "User not found",
+  NO_USERS: "No users found",
+} as const;
 
 export class UserService implements IUserService {
   constructor(private readonly userRepository: IUserRepository) {}
 
-  private toDto = (u: User | null) => (u ? UserMapper.toDto(u) : undefined);
+  private toDto = (u: User) => UserMapper.toDto(u);
 
   async getAllUsers({
     limit,
@@ -17,13 +23,15 @@ export class UserService implements IUserService {
   }: {
     limit: number;
     offset: number;
-  }): Promise<UserDto[] | undefined> {
+  }): Promise<UserDto[]> {
     const users = await this.userRepository.findAll({ limit, offset });
+    if (users.length === 0) throw new NotFoundError(MSG.NO_USERS);
     return users.map(this.toDto);
   }
 
-  async getUser(where: Prisma.UserWhereInput): Promise<UserDto | undefined> {
+  async getUser(where: Prisma.UserWhereInput): Promise<UserDto> {
     const user = await this.userRepository.findOne(where);
+    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
     return this.toDto(user);
   }
 

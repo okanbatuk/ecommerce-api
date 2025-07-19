@@ -1,54 +1,62 @@
 import fp from "fastify-plugin";
-import { FastifyInstance } from "fastify";
 import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
+import { FastifyInstance } from "fastify";
 import { ResponseCode } from "../types/response-code";
 import { ApiResponse } from "../types/api-response";
 import { sendReply } from "../utils/send-response";
+
+const prismaErrorMap: Record<
+  string,
+  { status: number; code: ResponseCode; msg: string }
+> = {
+  P2002: { status: 409, code: ResponseCode.CONFLICT, msg: "Unique violation" },
+  P2025: { status: 404, code: ResponseCode.NOT_FOUND, msg: "Record not found" },
+};
+
+const customErrorMap: Record<string, { status: number; code: ResponseCode }> = {
+  NotFoundError: { status: 404, code: ResponseCode.NOT_FOUND },
+  ConflictError: { status: 409, code: ResponseCode.CONFLICT },
+  BadRequestError: { status: 400, code: ResponseCode.BAD_REQUEST },
+  UnauthorizedError: { status: 401, code: ResponseCode.UNAUTHORIZED },
+  ForbiddenError: { status: 403, code: ResponseCode.FORBIDDEN },
+};
 
 export default fp(async (app: FastifyInstance) => {
   app.setErrorHandler((error, req, reply) => {
     let statusCode = 500;
     let responseCode = ResponseCode.INTERNAL_SERVER_ERROR;
-    let errors: string[] = [];
+    let message = "An unexpected error occurred";
 
     /* Prisma Errors */
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      switch (error.code) {
-        case "P2002": // Unique constraint failed
-          statusCode = 409;
-          responseCode = ResponseCode.CONFLICT;
-          errors = [`Unique violation: ${error.meta?.target ?? ""}`];
-          break;
-        case "P2025": // Record not found
-          statusCode = 404;
-          responseCode = ResponseCode.NOT_FOUND;
-          errors = ["Record not found"];
-          break;
-
-        default:
-          errors = [error.message];
-          break;
-      }
+      const map = prismaErrorMap[error.code];
+      statusCode = map.status;
+      responseCode = map.code;
+      message = `${map.msg}: ${error.meta?.target || ""}`.trim();
     }
-
     // Zod validation errors
     else if (error instanceof ZodError) {
       statusCode = 400;
       responseCode = ResponseCode.BAD_REQUEST;
-      errors = error.issues.map((i) => `${i.path.join(".")}: ${i.message}`);
+      message = error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join(", ");
     }
 
     // 404 Route not found
     else if (error.code === "FST_ERR_NOT_FOUND") {
       statusCode = 404;
       responseCode = ResponseCode.NOT_FOUND;
-      errors = ["Route not found"];
+      message = "Route not found";
     }
 
     // Other errors
-    else {
-      errors = [error.message || "An unexpected error occurred"];
+    else if (customErrorMap[error.name]) {
+      const map = customErrorMap[error.name];
+      statusCode = map.status;
+      responseCode = map.code;
+      message = error.message || message;
     }
 
     return sendReply<ApiResponse>(
@@ -56,8 +64,8 @@ export default fp(async (app: FastifyInstance) => {
       statusCode,
       responseCode,
       undefined,
-      errors[0] || "An error occurred",
-      errors
+      message,
+      [message]
     );
   });
 });
