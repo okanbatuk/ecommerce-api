@@ -1,4 +1,5 @@
 import { z } from "zod";
+import zodToJsonSchema from "zod-to-json-schema";
 
 export const createUserSchema = z
   .object({
@@ -30,5 +31,7 @@ export const createUserSchema = z
       .max(50, "First name must not exceed 50 characters"),
   })
   .strict();
+
+export const createUserJsonSchema = zodToJsonSchema(createUserSchema);
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
