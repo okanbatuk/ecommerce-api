@@ -20,6 +20,10 @@ const customErrorMap: Record<string, { status: number; code: ResponseCode }> = {
   BadRequestError: { status: 400, code: ResponseCode.BAD_REQUEST },
   UnauthorizedError: { status: 401, code: ResponseCode.UNAUTHORIZED },
   ForbiddenError: { status: 403, code: ResponseCode.FORBIDDEN },
+  InternalServerError: {
+    status: 500,
+    code: ResponseCode.INTERNAL_SERVER_ERROR,
+  },
 };
 
 export default fp(async (app: FastifyInstance) => {
