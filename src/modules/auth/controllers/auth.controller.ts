@@ -34,13 +34,7 @@ export class AuthController {
       maxAge: Number(config.jwt.refreshExpiresIn) || 604_800,
     });
 
-    return sendReply(
-      reply,
-      200,
-      ResponseCode.OK,
-      { accessToken, refreshToken },
-      MSG.LOGIN
-    );
+    return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.LOGIN);
   };
 
   /* POST /auth/refresh */

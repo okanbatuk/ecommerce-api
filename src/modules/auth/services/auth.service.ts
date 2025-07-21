@@ -6,6 +6,7 @@ import {
   normalizeFields,
   UnauthorizedError,
   InternalServerError,
+  ConflictError,
 } from "@/shared";
 import { TokenResponseDto } from "../dtos";
 import { User } from "@modules/user/user.entity";
@@ -30,7 +31,7 @@ export class AuthService implements IAuthService {
       this.userRepository.findOne({ username }),
     ]);
     if (byEmail || byUsername)
-      throw new UnauthorizedError(byEmail ? MSG.EMAIL : MSG.USERNAME);
+      throw new ConflictError(byEmail ? MSG.EMAIL : MSG.USERNAME);
   }
 
   private payload = (
