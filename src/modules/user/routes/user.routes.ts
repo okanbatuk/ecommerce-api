@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from "../controllers/user.controller";
+import { idParamJsonSchema } from "@shared/validations/id-param.schema";
 import { updatePasswordJsonSchema, updateUserJsonSchema } from "../schemas";
-import { idParamJsonSchema } from "../../../shared/validations/id-param.schema";
 
 export default async function userRoutes(fastify: FastifyInstance) {
   const userCtrl = new UserController();

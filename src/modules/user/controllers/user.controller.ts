@@ -1,20 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { UserDto } from "../dtos/user.dto";
+import { ResponseCode, sendReply, MSG } from "@/shared";
 import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
-import { sendReply } from "../../../shared/utils/send-response";
-import { ResponseCode } from "../../../shared/types/response-code";
 import { UserServiceFactory } from "../factories/user-service.factory";
-import { AuthServiceFactory } from "../../auth/factories/auth-service.factory";
-
-const MSG = {
-  NOT_FOUND: "User not found",
-  NO_USERS: "No users found",
-  UPDATED: "User updated successfully",
-  DELETED: "User deleted successfully",
-  ALL_USERS: "All users successfully retrieved",
-  FOUND: "User found",
-} as const;
+import { AuthServiceFactory } from "@modules/auth/factories/auth-service.factory";
 
 export class UserController {
   private readonly userService = UserServiceFactory.getInstance();

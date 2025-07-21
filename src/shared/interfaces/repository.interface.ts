@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { CreateUserInput, UpdateUserInput } from "../../modules/user/schemas";
+import { CreateUserInput, UpdateUserInput } from "@modules/user/schemas";
 
 export interface IRepository<T> {
   findAll({ limit, offset }: { limit: number; offset: number }): Promise<T[]>;

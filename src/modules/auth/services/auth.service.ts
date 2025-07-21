@@ -1,26 +1,22 @@
+import { randomUUID } from "crypto";
 import { compare, hash } from "bcryptjs";
-import { TokenResponseDto } from "../dtos";
-import { User } from "../../user/user.entity";
-import { CreateUserInput } from "../../user/schemas";
-import { LoginInput } from "../schemas/login.schema";
-import { logger, config, redis } from "../../../config";
-import { JwtPayload } from "../types/jwt/jwt-payload.type";
-import { IJwtService } from "../interfaces/jwt-service.interface";
-import { IAuthService } from "../interfaces/auth-service.interface";
-import { IUserRepository } from "../../user/interfaces/user-repository.interface";
 import {
-  InternalServerError,
+  MSG,
+  TokenType,
+  normalizeFields,
   UnauthorizedError,
-} from "../../../shared/exceptions";
-import { normalizeFields } from "../../../shared/utils/normalize-fields";
+  InternalServerError,
+} from "@/shared";
+import { TokenResponseDto } from "../dtos";
+import { User } from "@modules/user/user.entity";
+import { logger, config, redis } from "@/config";
+import { LoginInput } from "../schemas/login.schema";
+import { CreateUserInput } from "@modules/user/schemas";
+import { IAuthService, IJwtService } from "../interfaces";
+import { JwtPayload } from "../types/jwt/jwt-payload.type";
+import { IUserRepository } from "@modules/user/interfaces/user-repository.interface";
 
 const REFRESH_TTL = Number(config.jwt.refreshExpiresIn) || 604_800;
-
-const MSG = {
-  EMAIL: "Email already in use",
-  USERNAME: "Username already in use",
-  REFRESH_TOKEN: "Invalid refresh token",
-};
 
 export class AuthService implements IAuthService {
   constructor(
@@ -44,6 +40,7 @@ export class AuthService implements IAuthService {
       userId: user.id,
       email: user.email,
       username: user.username,
+      jti: randomUUID(),
     };
   };
 
@@ -61,19 +58,64 @@ export class AuthService implements IAuthService {
   async login({ identifier, password }: LoginInput): Promise<TokenResponseDto> {
     const user = await this.userRepository.findByEmailOrUsername(identifier);
     if (!user || !(await compare(password, user.password)))
-      throw new UnauthorizedError("Invalid credentials");
+      throw new UnauthorizedError(MSG.INVALID);
 
     const payload = this.payload(user);
 
     const tokens: TokenResponseDto = {
-      accessToken: this.jwtService.sign(payload),
-      refreshToken: this.jwtService.sign(payload, "refresh"),
+      accessToken: this.jwtService.sign(payload, {
+        tokenType: TokenType.ACCESS,
+      }),
+      refreshToken: this.jwtService.sign(payload, {
+        tokenType: TokenType.REFRESH,
+        customJti: payload.jti,
+      }),
     };
-    if (!tokens.accessToken || !tokens.refreshToken || !payload.jti)
-      throw new InternalServerError("Failed to generate refresh token");
+
+    if (!tokens.refreshToken || !payload.jti)
+      throw new InternalServerError(MSG.NO_TOKEN);
+
+    const key = this.redisKey(payload.userId, payload.jti);
+
+    await redis.set(key, tokens.refreshToken, "EX", REFRESH_TTL);
+
+    return tokens;
+  }
+
+  async refresh(refreshToken: string): Promise<TokenResponseDto> {
+    const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
+    if (!payload.jti) throw new UnauthorizedError(MSG.NO_REFRESH);
+
+    const key = this.redisKey(payload.userId, payload.jti);
+    const token = await redis.get(key);
+    if (!token || token !== refreshToken) {
+      await this.revokeAll(payload.userId);
+      logger.warn(`Possible token hijack - user ${payload.userId}`);
+      throw new UnauthorizedError(MSG.NO_REFRESH);
+    }
+
+    const user = await this.userRepository.findById(payload.userId);
+    if (!user) throw new UnauthorizedError(MSG.INVALID);
+
+    const newPayload = this.payload(user);
+
+    const tokens: TokenResponseDto = {
+      accessToken: this.jwtService.sign(newPayload, {
+        tokenType: TokenType.ACCESS,
+      }),
+      refreshToken: this.jwtService.sign(newPayload, {
+        tokenType: TokenType.REFRESH,
+        customJti: newPayload.jti,
+      }),
+    };
+
+    if (!tokens.refreshToken || !newPayload.jti)
+      throw new InternalServerError(MSG.NO_TOKEN);
+
+    await redis.del(key);
 
     await redis.set(
-      this.redisKey(payload.userId, payload.jti),
+      this.redisKey(newPayload.userId, newPayload.jti),
       tokens.refreshToken,
       "EX",
       REFRESH_TTL
@@ -82,30 +124,9 @@ export class AuthService implements IAuthService {
     return tokens;
   }
 
-  async refresh(refreshToken: string): Promise<TokenResponseDto> {
-    const payload = this.jwtService.verify(refreshToken, "refresh");
-    if (!payload.jti) throw new UnauthorizedError(MSG.REFRESH_TOKEN);
-
-    const key = this.redisKey(payload.userId, payload.jti);
-    const token = await redis.get(key);
-    if (!token || token !== refreshToken) {
-      await this.revokeAll(payload.userId);
-      logger.warn(`Possible token hijack - user ${payload.userId}`);
-      throw new UnauthorizedError(MSG.REFRESH_TOKEN);
-    }
-
-    const user = await this.userRepository.findById(payload.userId);
-    if (!user) throw new UnauthorizedError(MSG.REFRESH_TOKEN);
-
-    const newPayload = this.payload(user);
-    return {
-      accessToken: this.jwtService.sign(newPayload),
-    };
-  }
-
   async revoke(refreshToken: string): Promise<void> {
-    const payload = this.jwtService.verify(refreshToken, "refresh");
-    if (!payload.jti) throw new UnauthorizedError(MSG.REFRESH_TOKEN);
+    const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
+    if (!payload.jti) throw new UnauthorizedError(MSG.NO_REFRESH);
     const key = this.redisKey(payload.userId, payload.jti);
     await redis.del(key);
   }

@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { AuthController } from "../controllers/auth.controller";
-import { createUserJsonSchema } from "../../user/schemas";
 import { loginJsonSchema } from "../schemas/login.schema";
+import { createUserJsonSchema } from "@modules/user/schemas";
+import { AuthController } from "../controllers/auth.controller";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const authCtrl = new AuthController();
@@ -20,5 +20,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
     },
     authCtrl.login
   );
+  fastify.post("/refresh", authCtrl.refresh);
   fastify.post("/logout", authCtrl.logout);
 }

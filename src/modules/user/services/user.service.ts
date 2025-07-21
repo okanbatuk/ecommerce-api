@@ -1,28 +1,21 @@
 import { compare, hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
-import { User } from "../user.entity";
-import { UserDto } from "../dtos/user.dto";
-import { UserMapper } from "../mappers/user.mapper";
 import {
   CreateUserInput,
   UpdatePasswordInput,
   UpdateUserInput,
 } from "../schemas";
-import { IUserService } from "../interfaces/user-service.interface";
-import { IUserRepository } from "../interfaces/user-repository.interface";
 import {
-  BadRequestError,
+  MSG,
+  normalizeFields,
   NotFoundError,
+  BadRequestError,
   UnauthorizedError,
-} from "../../../shared/exceptions";
-import { normalizeFields } from "../../../shared/utils/normalize-fields";
-
-const MSG = {
-  NOT_FOUND: "User not found",
-  NO_USERS: "No users found",
-  INCORRECT: "Current password incorrect",
-  NO_MATCH: "New password cannot be the same as the current password",
-} as const;
+} from "@/shared";
+import { User } from "../user.entity";
+import { UserDto } from "../dtos/user.dto";
+import { UserMapper } from "../mappers/user.mapper";
+import { IUserRepository, IUserService } from "../interfaces";
 
 export class UserService implements IUserService {
   constructor(private readonly userRepository: IUserRepository) {}

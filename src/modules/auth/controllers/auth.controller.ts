@@ -1,18 +1,9 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { AuthServiceFactory } from "../factories/auth-service.factory";
-import { CreateUserInput } from "../../user/schemas";
-import { sendReply } from "../../../shared/utils/send-response";
-import { ResponseCode } from "../../../shared/types/response-code";
+import { config } from "@/config";
 import { LoginInput } from "../schemas/login.schema";
-import { config } from "../../../config";
-
-const MSG = {
-  REGISTERED: "User registered successfully",
-  LOGIN: "Logged in successfully",
-  NO_REFRESH: "Refresh token not found",
-  REFRESH: "Token refreshed successfully",
-  LOGOUT: "Logged out successfully",
-};
+import { CreateUserInput } from "@modules/user/schemas";
+import { AuthServiceFactory } from "../factories/auth-service.factory";
+import { MSG, sendReply, ResponseCode, UnauthorizedError } from "@/shared";
 
 export class AuthController {
   private readonly authService = AuthServiceFactory.getInstance();
@@ -37,36 +28,50 @@ export class AuthController {
 
     reply.setCookie("refreshToken", refreshToken!, {
       httpOnly: true,
-      secure: true,
+      // secure: true,
       sameSite: "lax",
-      path: "/auth",
+      path: "/api/v1/auth",
       maxAge: Number(config.jwt.refreshExpiresIn) || 604_800,
     });
 
-    return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.LOGIN);
+    return sendReply(
+      reply,
+      200,
+      ResponseCode.OK,
+      { accessToken, refreshToken },
+      MSG.LOGIN
+    );
   };
 
   /* POST /auth/refresh */
-  refresh = async (
-    req: FastifyRequest<{ Body: { refreshToken: string } }>,
-    reply: FastifyReply
-  ): Promise<void> => {
-    const refreshToken = reply.request.cookies.refreshToken;
-    if (!refreshToken) throw new Error(MSG.NO_REFRESH);
+  refresh = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) throw new UnauthorizedError(MSG.NO_REFRESH);
 
-    const { accessToken } = await this.authService.refresh(
-      req.body.refreshToken
+    const tokens = await this.authService.refresh(refreshToken);
+
+    reply.setCookie("refreshToken", tokens.refreshToken!, {
+      httpOnly: true,
+      // secure: true,
+      sameSite: "lax",
+      path: "/api/v1/auth",
+      maxAge: Number(config.jwt.refreshExpiresIn) || 604_800,
+    });
+
+    return sendReply(
+      reply,
+      200,
+      ResponseCode.OK,
+      { accessToken: tokens.accessToken },
+      MSG.REFRESH
     );
-    return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.REFRESH);
   };
 
   /* POST /auth/logout */
-  logout = async (
-    req: FastifyRequest<{ Body: { refreshToken: string } }>,
-    reply: FastifyReply
-  ): Promise<void> => {
-    const refreshToken = reply.request.cookies.refreshToken;
-    if (refreshToken) await this.authService.revoke(refreshToken);
+  logout = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) throw new UnauthorizedError(MSG.NO_REFRESH);
+    await this.authService.revoke(refreshToken);
     reply.clearCookie("refreshToken");
     return sendReply(reply, 204, ResponseCode.NO_CONTENT, null, MSG.LOGOUT);
   };

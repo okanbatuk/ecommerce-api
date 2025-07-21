@@ -6,7 +6,7 @@ import fastifyCookie from "@fastify/cookie";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import { config } from "./env.config";
-import validationHooks from "../shared/plugins/validation-hooks";
+import validationHooks from "@shared/plugins/validation-hooks";
 
 export async function registerCommonPlugins(app: FastifyInstance) {
   await app.register(cors, {

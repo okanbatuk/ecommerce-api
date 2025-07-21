@@ -1,4 +1,4 @@
-import { prisma } from "../../../shared/lib/prisma";
+import { prisma } from "@shared/lib/prisma";
 import { UserService } from "../services/user.service";
 import { UserRepository } from "../repositories/user.repository";
 

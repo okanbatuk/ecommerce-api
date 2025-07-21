@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { User } from "../user.entity";
-import { caseInsensitive } from "../../../shared/lib/prisma.utils";
-import { Repository } from "../../../shared/repositories/repository";
+import { caseInsensitive } from "@shared/lib/prisma.utils";
+import { Repository } from "@shared/repositories/repository";
 import { IUserRepository } from "../interfaces/user-repository.interface";
 
 export class UserRepository

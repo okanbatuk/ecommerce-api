@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { IRepository } from "../interfaces/repository.interface";
-import { CreateUserInput, UpdateUserInput } from "../../modules/user/schemas";
+import { CreateUserInput, UpdateUserInput } from "@modules/user/schemas";
 
 export abstract class Repository<T> implements IRepository<T> {
   protected abstract readonly modelName: keyof PrismaClient;
