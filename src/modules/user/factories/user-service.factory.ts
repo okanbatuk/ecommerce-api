@@ -1,4 +1,3 @@
-import { prisma } from "@shared/lib/prisma";
 import { UserService } from "../services/user.service";
 import { UserRepository } from "../repositories/user.repository";
 
@@ -7,7 +6,7 @@ export class UserServiceFactory {
 
   static getInstance(): UserService {
     if (!this.instance) {
-      const userRepository = new UserRepository(prisma);
+      const userRepository = new UserRepository();
       this.instance = new UserService(userRepository);
     }
     return this.instance;

@@ -1,21 +1,18 @@
 import { compare, hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import {
-  CreateUserInput,
-  UpdatePasswordInput,
-  UpdateUserInput,
-} from "../schemas";
-import {
   MSG,
   normalizeFields,
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
 } from "@/shared";
-import { User } from "../user.entity";
 import { UserDto } from "../dtos/user.dto";
-import { UserMapper } from "../mappers/user.mapper";
+import { User } from "../domain/user.entity";
+import { UserFilter } from "../domain/user-filter";
+import { UserMapper } from "../mappers/user-dto.mapper";
 import { IUserRepository, IUserService } from "../interfaces";
+import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
 
 export class UserService implements IUserService {
   constructor(private readonly userRepository: IUserRepository) {}
@@ -34,15 +31,9 @@ export class UserService implements IUserService {
     return users.map(this.toDto);
   }
 
-  async getUser(where: Prisma.UserWhereInput): Promise<UserDto> {
-    const user = await this.userRepository.findOne(where);
+  async getUser(filter: UserFilter): Promise<UserDto> {
+    const user = await this.userRepository.findOne(filter);
     if (!user) throw new NotFoundError(MSG.NOT_FOUND);
-    return this.toDto(user);
-  }
-
-  async createUser(data: CreateUserInput): Promise<UserDto> {
-    const normalizedData = normalizeFields(data);
-    const user = await this.userRepository.create(normalizedData);
     return this.toDto(user);
   }
 

@@ -1,10 +1,11 @@
-export type UserDto = {
+export type User = {
   id: string;
   username: string;
   email: string;
+  password: string;
   firstName?: string;
   lastName?: string;
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
   role: "ADMIN" | "USER";
+  createdAt: Date;
+  updatedAt: Date;
 };

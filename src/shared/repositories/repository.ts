@@ -1,15 +1,23 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { IRepository } from "../interfaces/repository.interface";
-import { CreateUserInput, UpdateUserInput } from "@modules/user/schemas";
 
-export abstract class Repository<T> implements IRepository<T> {
+export abstract class Repository<
+  T,
+  C = Partial<T>,
+  U = Partial<T>,
+  F = Partial<T>
+> implements IRepository<T, C, U, F>
+{
   protected abstract readonly modelName: keyof PrismaClient;
+
+  protected abstract toPrismaFilter(f: F): Record<string, any>;
 
   constructor(protected readonly prisma: PrismaClient) {}
 
   protected get delegate() {
     return this.prisma[this.modelName] as any;
   }
+  protected abstract toDomain(raw: any): T;
 
   async findAll({
     limit,
@@ -18,23 +26,27 @@ export abstract class Repository<T> implements IRepository<T> {
     limit: number;
     offset: number;
   }): Promise<T[]> {
-    return this.delegate.findMany({
+    const rows = await this.delegate.findMany({
       take: limit,
       skip: offset,
       orderBy: { createdAt: "desc" },
     });
+    return rows.map(this.toDomain);
   }
-  async findOne(where: Prisma.UserWhereInput): Promise<T | null> {
-    return this.delegate.findFirst({ where });
+  async findOne(filter: F): Promise<T | null> {
+    const row = await this.delegate.findFirst({
+      where: this.toPrismaFilter(filter),
+    });
+    return row ? this.toDomain(row) : null;
   }
-  async findById(id: string): Promise<T | null> {
-    return this.delegate.findUnique({ where: { id } });
+
+  async create(data: C): Promise<T> {
+    const row = await this.delegate.create({ data });
+    return this.toDomain(row);
   }
-  async create(data: CreateUserInput): Promise<T> {
-    return this.delegate.create({ data });
-  }
-  async update(id: string, data: UpdateUserInput): Promise<T> {
-    return this.delegate.update({ where: { id }, data });
+  async update(id: string, data: U): Promise<T> {
+    const row = await this.delegate.update({ where: { id }, data });
+    return this.toDomain(row);
   }
   async delete(id: string): Promise<void> {
     await this.delegate.delete({ where: { id } });

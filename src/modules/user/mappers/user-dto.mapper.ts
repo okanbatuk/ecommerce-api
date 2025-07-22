@@ -1,8 +1,8 @@
-import { User as PrismaUser } from "@prisma/client";
+import { User } from "../domain/user.entity";
 import { UserDto } from "../dtos/user.dto";
 
 export class UserMapper {
-  static toDto(user: PrismaUser): UserDto {
+  static toDto(user: User): UserDto {
     return {
       id: user.id,
       username: user.username,
@@ -11,6 +11,7 @@ export class UserMapper {
       lastName: user.lastName ?? undefined,
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
+      role: user.role,
     };
   }
 }

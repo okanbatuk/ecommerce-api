@@ -3,19 +3,19 @@ import { FastifyInstance } from "fastify";
 import { Rule } from "../types/validation-rule";
 import { sendReply } from "../utils/send-response";
 import { ResponseCode } from "../types/response-code";
-import { loginSchema } from "../../modules/auth/schemas/login.schema";
-import {
-  createUserSchema,
-  updatePasswordSchema,
-  updateUserSchema,
-} from "../../modules/user/schemas";
+import { loginSchema, registerSchema } from "@/modules/auth/schemas";
+import { updatePasswordSchema, updateUserSchema } from "@modules/user/schemas";
 
 export default fp(async (fastify: FastifyInstance) => {
   const rules: Rule[] = [
     { method: "PATCH", pathPrefix: "/users", schema: updateUserSchema },
-    { method: "POST", pathPrefix: "/auth/register", schema: createUserSchema },
+    { method: "POST", pathPrefix: "/auth/register", schema: registerSchema },
     { method: "POST", pathPrefix: "/auth/login", schema: loginSchema },
-    { method: "PATCH", pathPrefix: "/users/:id/password", schema: updatePasswordSchema, },
+    {
+      method: "PATCH",
+      pathPrefix: "/users/:id/password",
+      schema: updatePasswordSchema,
+    },
   ];
 
   fastify.addHook("preValidation", async (req, reply) => {

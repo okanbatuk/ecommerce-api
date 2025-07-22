@@ -1,8 +1,8 @@
-import { CreateUserInput } from "../../modules/user/schemas";
+import { CreateUserInput } from "@/modules/user/schemas";
 
 type NormalizeFields = Pick<
   CreateUserInput,
-  "email" | "username" | "firstName" | "lastName"
+  "email" | "username" | "firstName" | "lastName" | "role"
 >;
 
 export const normalizeFields = <T extends Partial<NormalizeFields>>(
@@ -12,8 +12,8 @@ export const normalizeFields = <T extends Partial<NormalizeFields>>(
     ...input,
     email: input.email?.trim().toLowerCase(),
     username: input.username?.trim().toLowerCase(),
-    ...(input.firstName && { firstName: toTitleCase(input.firstName?.trim()) }),
-    ...(input.lastName && { lastName: toTitleCase(input.lastName?.trim()) }),
+    ...(input.firstName && { firstName: toTitleCase(input.firstName.trim()) }),
+    ...(input.lastName && { lastName: toTitleCase(input.lastName.trim()) }),
   };
 };
 

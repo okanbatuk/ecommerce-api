@@ -1,5 +1,4 @@
 import { jwtConfig } from "@/config";
-import { prisma } from "@shared/lib/prisma";
 import { JwtService } from "../services/jwt.service";
 import { AuthService } from "../services/auth.service";
 import { UserRepository } from "@modules/user/repositories/user.repository";
@@ -10,7 +9,7 @@ export class AuthServiceFactory {
   static getInstance(): AuthService {
     if (!this.instance) {
       const jwtService = new JwtService(jwtConfig);
-      const userRepository = new UserRepository(prisma);
+      const userRepository = new UserRepository();
       this.instance = new AuthService(userRepository, jwtService);
     }
     return this.instance;

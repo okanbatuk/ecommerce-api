@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { compare, hash } from "bcryptjs";
 import {
   MSG,
+  Role,
   TokenType,
   normalizeFields,
   UnauthorizedError,
@@ -9,13 +10,13 @@ import {
   ConflictError,
 } from "@/shared";
 import { TokenResponseDto } from "../dtos";
-import { User } from "@modules/user/user.entity";
+import { User } from "@/modules/user/domain/user.entity";
 import { logger, config, redis } from "@/config";
-import { LoginInput } from "../schemas/login.schema";
-import { CreateUserInput } from "@modules/user/schemas";
+import { LoginInput, RegisterInput } from "../schemas";
 import { IAuthService, IJwtService } from "../interfaces";
 import { JwtPayload } from "../types/jwt/jwt-payload.type";
 import { IUserRepository } from "@modules/user/interfaces/user-repository.interface";
+import { caseInsensitive } from "@/shared/lib";
 
 const REFRESH_TTL = Number(config.jwt.refreshExpiresIn) || 604_800;
 
@@ -25,16 +26,19 @@ export class AuthService implements IAuthService {
     private readonly jwtService: IJwtService
   ) {}
 
-  private async assertUnique(email: string, username: string): Promise<void> {
+  private assertUnique = async (
+    email: string,
+    username: string
+  ): Promise<void> => {
     const [byEmail, byUsername] = await Promise.all([
       this.userRepository.findOne({ email }),
       this.userRepository.findOne({ username }),
     ]);
     if (byEmail || byUsername)
       throw new ConflictError(byEmail ? MSG.EMAIL : MSG.USERNAME);
-  }
+  };
 
-  private payload = (
+  private buildPayload = (
     user: Pick<User, "id" | "email" | "username">
   ): JwtPayload => {
     return {
@@ -49,11 +53,28 @@ export class AuthService implements IAuthService {
     return `refresh:${userId}:${jti}`;
   };
 
-  async register(dto: CreateUserInput): Promise<void> {
+  private storeRefresh = async (userId: string, jti: string, token: string) => {
+    await redis.set(this.redisKey(userId, jti), token, "EX", REFRESH_TTL);
+  };
+
+  private removeRefresh = async (userId: string, jti: string) => {
+    await redis.del(this.redisKey(userId, jti));
+  };
+
+  private removeAllRefresh = async (userId: string): Promise<void> => {
+    const keys = await redis.keys(`refresh:${userId}:*`);
+    if (keys.length) await Promise.all(keys.map((key) => redis.del(key)));
+  };
+
+  async register(dto: RegisterInput): Promise<void> {
     const { email, username } = normalizeFields(dto);
     await this.assertUnique(email, username);
     const hashed = await hash(dto.password, 10);
-    await this.userRepository.create({ ...dto, password: hashed });
+    await this.userRepository.create({
+      ...dto,
+      password: hashed,
+      role: Role.USER,
+    });
   }
 
   async login({ identifier, password }: LoginInput): Promise<TokenResponseDto> {
@@ -61,7 +82,7 @@ export class AuthService implements IAuthService {
     if (!user || !(await compare(password, user.password)))
       throw new UnauthorizedError(MSG.INVALID);
 
-    const payload = this.payload(user);
+    const payload = this.buildPayload(user);
 
     const tokens: TokenResponseDto = {
       accessToken: this.jwtService.sign(payload, {
@@ -76,10 +97,7 @@ export class AuthService implements IAuthService {
     if (!tokens.refreshToken || !payload.jti)
       throw new InternalServerError(MSG.NO_TOKEN);
 
-    const key = this.redisKey(payload.userId, payload.jti);
-
-    await redis.set(key, tokens.refreshToken, "EX", REFRESH_TTL);
-
+    await this.storeRefresh(payload.userId, payload.jti, tokens.refreshToken);
     return tokens;
   }
 
@@ -90,15 +108,15 @@ export class AuthService implements IAuthService {
     const key = this.redisKey(payload.userId, payload.jti);
     const token = await redis.get(key);
     if (!token || token !== refreshToken) {
-      await this.revokeAll(payload.userId);
+      await this.removeAllRefresh(payload.userId);
       logger.warn(`Possible token hijack - user ${payload.userId}`);
       throw new UnauthorizedError(MSG.NO_REFRESH);
     }
 
-    const user = await this.userRepository.findById(payload.userId);
+    const user = await this.userRepository.findOne({ id: payload.userId });
     if (!user) throw new UnauthorizedError(MSG.INVALID);
 
-    const newPayload = this.payload(user);
+    const newPayload = this.buildPayload(user);
 
     const tokens: TokenResponseDto = {
       accessToken: this.jwtService.sign(newPayload, {
@@ -113,13 +131,11 @@ export class AuthService implements IAuthService {
     if (!tokens.refreshToken || !newPayload.jti)
       throw new InternalServerError(MSG.NO_TOKEN);
 
-    await redis.del(key);
-
-    await redis.set(
-      this.redisKey(newPayload.userId, newPayload.jti),
-      tokens.refreshToken,
-      "EX",
-      REFRESH_TTL
+    await this.removeRefresh(payload.userId, payload.jti);
+    await this.storeRefresh(
+      newPayload.userId,
+      newPayload.jti,
+      tokens.refreshToken
     );
 
     return tokens;
@@ -128,12 +144,11 @@ export class AuthService implements IAuthService {
   async revoke(refreshToken: string): Promise<void> {
     const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
     if (!payload.jti) throw new UnauthorizedError(MSG.NO_REFRESH);
-    const key = this.redisKey(payload.userId, payload.jti);
-    await redis.del(key);
+
+    await this.removeRefresh(payload.userId, payload.jti);
   }
 
   async revokeAll(userId: string): Promise<void> {
-    const keys = await redis.keys(`refresh:${userId}:*`);
-    if (keys.length) await Promise.all(keys.map((key) => redis.del(key)));
+    await this.removeAllRefresh(userId);
   }
 }

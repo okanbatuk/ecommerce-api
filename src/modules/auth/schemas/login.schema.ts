@@ -25,7 +25,8 @@ export const loginSchema = z
         "Password must include at least one uppercase letter, one lowercase letter and one number"
       ),
   })
-  .strict();
+  .strict()
+  .required();
 
 export const loginJsonSchema = zodToJsonSchema(loginSchema);
 

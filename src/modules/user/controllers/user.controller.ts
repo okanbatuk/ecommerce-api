@@ -1,10 +1,10 @@
-import { Prisma } from "@prisma/client";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { UserDto } from "../dtos/user.dto";
 import { ResponseCode, sendReply, MSG } from "@/shared";
 import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
 import { UserServiceFactory } from "../factories/user-service.factory";
 import { AuthServiceFactory } from "@modules/auth/factories/auth-service.factory";
+import { UserFilter } from "../domain/user-filter";
 
 export class UserController {
   private readonly userService = UserServiceFactory.getInstance();
@@ -38,11 +38,9 @@ export class UserController {
   ): Promise<void> => {
     const { username, email, limit = 20, offset = 0 } = req.query;
 
-    const where: Prisma.UserWhereInput = {
-      ...(username && {
-        username: { contains: username, mode: "insensitive" },
-      }),
-      ...(email && { email: { contains: email, mode: "insensitive" } }),
+    const where: UserFilter = {
+      ...(username && { username }),
+      ...(email && { email }),
     };
 
     const hasFilter = Object.keys(where).length > 0;

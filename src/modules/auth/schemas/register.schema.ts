@@ -1,8 +1,7 @@
 import { z } from "zod";
 import zodToJsonSchema from "zod-to-json-schema";
-import { Role } from "@/shared";
 
-export const createUserSchema = z
+export const registerSchema = z
   .object({
     username: z
       .string()
@@ -30,10 +29,9 @@ export const createUserSchema = z
       .string()
       .min(3, "First name must be at least 3 characters long")
       .max(50, "First name must not exceed 50 characters"),
-    role: z.nativeEnum(Role).default(Role.USER),
   })
   .strict();
 
-export const createUserJsonSchema = zodToJsonSchema(createUserSchema);
+export const registerJsonSchema = zodToJsonSchema(registerSchema);
 
-export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type RegisterInput = z.infer<typeof registerSchema>;

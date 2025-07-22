@@ -1,14 +1,13 @@
 import { FastifyInstance } from "fastify";
-import { loginJsonSchema } from "../schemas/login.schema";
-import { createUserJsonSchema } from "@modules/user/schemas";
 import { AuthController } from "../controllers/auth.controller";
+import { loginJsonSchema, registerJsonSchema } from "../schemas";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const authCtrl = new AuthController();
 
   fastify.post(
     "/register",
-    { schema: { body: createUserJsonSchema } },
+    { schema: { body: registerJsonSchema } },
     authCtrl.register
   );
   fastify.post(
