@@ -10,18 +10,15 @@ export const updateUserSchema = z
       .regex(
         /^[a-zA-Z0-9_]+$/,
         "Username can only contain letters, numbers, and underscores"
-      )
-      .optional(),
+      ),
     firstName: z
       .string()
       .min(3, "First name must be at least 3 characters long")
-      .max(50, "First name must not exceed 50 characters")
-      .optional(),
+      .max(50, "First name must not exceed 50 characters"),
     lastName: z
       .string()
       .min(3, "First name must be at least 3 characters long")
-      .max(50, "First name must not exceed 50 characters")
-      .optional(),
+      .max(50, "First name must not exceed 50 characters"),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

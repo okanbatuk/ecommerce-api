@@ -58,7 +58,7 @@ export class UserController {
     );
   };
 
-  /* PATCH /users/:id */
+  /* PUT /users/:id */
   update = async (
     req: FastifyRequest<{ Params: { id: string }; Body: UpdateUserInput }>,
     res: FastifyReply
@@ -72,7 +72,7 @@ export class UserController {
     return sendReply(res, 200, ResponseCode.OK, updatedUser, MSG.UPDATED);
   };
 
-  /* PATCH /users/:id/password  */
+  /* PUT /users/:id/password  */
   updatePassword = async (
     req: FastifyRequest<{ Params: { id: string }; Body: UpdatePasswordInput }>,
     res: FastifyReply

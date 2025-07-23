@@ -5,6 +5,7 @@ import { FastifyInstance } from "fastify";
 import { ResponseCode } from "../types/response-code";
 import { ApiResponse } from "../types/api-response";
 import { sendReply } from "../utils/send-response";
+import { logger } from "@/config";
 
 const prismaErrorMap: Record<
   string,
@@ -48,6 +49,13 @@ export default fp(async (app: FastifyInstance) => {
         .join(", ");
     }
 
+    // AJV validation errors
+    else if (error.code === "FST_ERR_VALIDATION") {
+      statusCode = 400;
+      responseCode = ResponseCode.BAD_REQUEST;
+      message = error.message;
+    }
+
     // 404 Route not found
     else if (error.code === "FST_ERR_NOT_FOUND") {
       statusCode = 404;
@@ -62,6 +70,8 @@ export default fp(async (app: FastifyInstance) => {
       responseCode = map.code;
       message = error.message || message;
     }
+
+    error.message ? logger.warn(error.message) : logger.warn(message);
 
     return sendReply<ApiResponse>(
       reply,

@@ -18,7 +18,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
     userCtrl.getById
   );
 
-  fastify.patch(
+  fastify.put(
     "/:id",
     {
       schema: {
@@ -29,7 +29,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
     userCtrl.update
   );
 
-  fastify.patch(
+  fastify.put(
     "/:id/password",
     {
       schema: {
