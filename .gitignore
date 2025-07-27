@@ -33,6 +33,9 @@ prisma/migrations/*.sql
 # Build
 dist/
 
+# TypeScript
+*.tsbuildinfo
+
 # REST Client dosyaları
 requests/
 *.http

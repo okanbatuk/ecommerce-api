@@ -1,3 +1,4 @@
+import auth from "@fastify/auth";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import fastifyJwt from "@fastify/jwt";
@@ -6,6 +7,7 @@ import fastifyCookie from "@fastify/cookie";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import { config } from "./env.config";
+import authPlugin from "@/shared/plugins/auth";
 import validationHooks from "@shared/plugins/validation-hooks";
 
 export async function registerCommonPlugins(app: FastifyInstance) {
@@ -24,6 +26,8 @@ export async function registerCommonPlugins(app: FastifyInstance) {
       signed: false,
     },
   });
+  await app.register(auth);
+  await app.register(authPlugin);
   await app.register(validationHooks);
 
   await app.register(fastifySwagger, {

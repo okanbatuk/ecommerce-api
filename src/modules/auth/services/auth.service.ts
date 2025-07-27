@@ -23,12 +23,12 @@ const REFRESH_TTL = Number(config.jwt.refreshExpiresIn) || 604_800;
 export class AuthService implements IAuthService {
   constructor(
     private readonly userRepository: IUserRepository,
-    private readonly jwtService: IJwtService
+    private readonly jwtService: IJwtService,
   ) {}
 
   private assertUnique = async (
     email: string,
-    username: string
+    username: string,
   ): Promise<void> => {
     const [byEmail, byUsername] = await Promise.all([
       this.userRepository.findOne({ email }),
@@ -39,12 +39,13 @@ export class AuthService implements IAuthService {
   };
 
   private buildPayload = (
-    user: Pick<User, "id" | "email" | "username">
+    user: Pick<User, "id" | "email" | "username" | "role">,
   ): JwtPayload => {
     return {
       userId: user.id,
       email: user.email,
       username: user.username,
+      role: user.role as Role,
       jti: randomUUID(),
     };
   };
@@ -135,7 +136,7 @@ export class AuthService implements IAuthService {
     await this.storeRefresh(
       newPayload.userId,
       newPayload.jti,
-      tokens.refreshToken
+      tokens.refreshToken,
     );
 
     return tokens;

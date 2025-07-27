@@ -6,6 +6,8 @@ import { updatePasswordJsonSchema, updateUserJsonSchema } from "../schemas";
 export default async function userRoutes(fastify: FastifyInstance) {
   const userCtrl = new UserController();
 
+  fastify.addHook("preHandler", fastify.authenticate);
+
   fastify.get("/", userCtrl.search);
 
   fastify.get(
@@ -15,38 +17,41 @@ export default async function userRoutes(fastify: FastifyInstance) {
         params: idParamJsonSchema,
       },
     },
-    userCtrl.getById
+    userCtrl.getById,
   );
 
   fastify.put(
     "/:id",
     {
+      preHandler: fastify.assertOwnUser,
       schema: {
         params: idParamJsonSchema,
         body: updateUserJsonSchema,
       },
     },
-    userCtrl.update
+    userCtrl.update,
   );
 
   fastify.put(
     "/:id/password",
     {
+      preHandler: fastify.assertOwnUser,
       schema: {
         params: idParamJsonSchema,
         body: updatePasswordJsonSchema,
       },
     },
-    userCtrl.updatePassword
+    userCtrl.updatePassword,
   );
 
   fastify.delete(
     "/:id",
     {
+      preHandler: fastify.assertOwnUser,
       schema: {
         params: idParamJsonSchema,
       },
     },
-    userCtrl.remove
+    userCtrl.remove,
   );
 }
