@@ -1,23 +1,34 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import { jwtConfig } from "@/config";
 import { UserDto } from "../dtos/user.dto";
-import { ResponseCode, sendReply, MSG } from "@/shared";
-import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
-import { UserServiceFactory } from "../factories/user-service.factory";
-import { AuthServiceFactory } from "@modules/auth/factories/auth-service.factory";
 import { UserFilter } from "../domain/user-filter";
+import { UserService } from "../services/user.service";
+import { JwtService } from "@/modules/auth/services/jwt.service";
+import { UserRepository } from "../repositories/user.repository";
+import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
+import { AuthService } from "@/modules/auth/services/auth.service";
+import { ServiceFactory } from "@/shared/factories/service.factory";
+import { ResponseCode, sendReply, MSG, normalizeFields } from "@/shared";
 
 export class UserController {
-  private readonly userService = UserServiceFactory.getInstance();
-  private readonly authService = AuthServiceFactory.getInstance();
+  private readonly userService = ServiceFactory.getInstance(
+    UserService,
+    UserRepository,
+  );
+  private readonly authService = ServiceFactory.getInstance(
+    AuthService,
+    UserRepository,
+    new JwtService(jwtConfig),
+  );
 
   private async assertUserExists(id: string): Promise<UserDto> {
-    const user = await this.userService.getUser({ id });
+    const user = await this.userService.findOne({ id });
     return user;
   }
   /* GET /users/:id */
   getById = async (
     req: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const user = await this.assertUserExists(req.params.id);
 
@@ -34,7 +45,7 @@ export class UserController {
         offset?: number;
       };
     }>,
-    res: FastifyReply
+    res: FastifyReply,
   ): Promise<void> => {
     const { username, email, limit = 20, offset = 0 } = req.query;
 
@@ -46,28 +57,29 @@ export class UserController {
     const hasFilter = Object.keys(where).length > 0;
 
     const result = hasFilter
-      ? await this.userService.getUser(where)
-      : await this.userService.getAllUsers({ limit, offset });
+      ? await this.userService.findOne(where)
+      : await this.userService.findAll({ limit, offset });
 
     return sendReply(
       res,
       200,
       ResponseCode.OK,
       result,
-      hasFilter ? MSG.FOUND : MSG.ALL_USERS
+      hasFilter ? MSG.FOUND : MSG.ALL_USERS,
     );
   };
 
   /* PUT /users/:id */
   update = async (
     req: FastifyRequest<{ Params: { id: string }; Body: UpdateUserInput }>,
-    res: FastifyReply
+    res: FastifyReply,
   ): Promise<void> => {
     await this.assertUserExists(req.params.id);
 
-    const updatedUser = await this.userService.updateUser(
+    const normalizeData = normalizeFields(req.body);
+    const updatedUser = await this.userService.update(
       req.params.id,
-      req.body
+      normalizeData,
     );
     return sendReply(res, 200, ResponseCode.OK, updatedUser, MSG.UPDATED);
   };
@@ -75,7 +87,7 @@ export class UserController {
   /* PUT /users/:id/password  */
   updatePassword = async (
     req: FastifyRequest<{ Params: { id: string }; Body: UpdatePasswordInput }>,
-    res: FastifyReply
+    res: FastifyReply,
   ): Promise<void> => {
     await this.assertUserExists(req.params.id);
     await this.userService.updatePassword(req.params.id, req.body);
@@ -86,11 +98,11 @@ export class UserController {
   /* DELETE /users/:id */
   remove = async (
     req: FastifyRequest<{ Params: { id: string } }>,
-    res: FastifyReply
+    res: FastifyReply,
   ): Promise<void> => {
     await this.assertUserExists(req.params.id);
 
-    await this.userService.deleteUser(req.params.id);
+    await this.userService.delete(req.params.id);
     return sendReply(res, 204, ResponseCode.NO_CONTENT, null, MSG.DELETED);
   };
 }

@@ -1,11 +1,18 @@
 import { FastifyReply, FastifyRequest } from "fastify";
-import { config } from "@/config";
+import { config, jwtConfig } from "@/config";
+import { JwtService } from "../services/jwt.service";
+import { AuthService } from "../services/auth.service";
 import { LoginInput, RegisterInput } from "../schemas";
-import { AuthServiceFactory } from "../factories/auth-service.factory";
+import { ServiceFactory } from "@shared/factories/service.factory";
+import { UserRepository } from "@modules/user/repositories/user.repository";
 import { MSG, sendReply, ResponseCode, UnauthorizedError } from "@/shared";
 
 export class AuthController {
-  private readonly authService = AuthServiceFactory.getInstance();
+  private readonly authService = ServiceFactory.getInstance(
+    AuthService,
+    UserRepository,
+    new JwtService(jwtConfig),
+  );
 
   private setRefreshCookie = (reply: FastifyReply, token: string): void => {
     reply.setCookie("refreshToken", token, {
@@ -30,7 +37,7 @@ export class AuthController {
   /* POST /auth/register */
   register = async (
     req: FastifyRequest<{ Body: RegisterInput }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     await this.authService.register(req.body);
     return sendReply(reply, 201, ResponseCode.CREATED, null, MSG.REGISTERED);
@@ -39,10 +46,10 @@ export class AuthController {
   /* POST /auth/login */
   login = async (
     req: FastifyRequest<{ Body: LoginInput }>,
-    reply: FastifyReply
+    reply: FastifyReply,
   ): Promise<void> => {
     const { accessToken, refreshToken } = await this.authService.login(
-      req.body
+      req.body,
     );
     this.setRefreshCookie(reply, refreshToken!);
     return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.LOGIN);
@@ -61,7 +68,7 @@ export class AuthController {
       200,
       ResponseCode.OK,
       { accessToken: tokens.accessToken },
-      MSG.REFRESH
+      MSG.REFRESH,
     );
   };
 
