@@ -12,39 +12,33 @@ import { User } from "../domain/user.entity";
 import { UserFilter } from "../domain/user-filter";
 import { UserMapper } from "../mappers/user-dto.mapper";
 import { IUserRepository, IUserService } from "../interfaces";
-import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
+import {
+  CreateUserInput,
+  UpdatePasswordInput,
+  UpdateUserInput,
+} from "../schemas";
+import { BaseService } from "@/shared/services/base.service";
 
-export class UserService implements IUserService {
-  constructor(private readonly userRepository: IUserRepository) {}
-
-  private toDto = (u: User) => UserMapper.toDto(u);
-
-  async getAllUsers({
-    limit,
-    offset,
-  }: {
-    limit: number;
-    offset: number;
-  }): Promise<UserDto[]> {
-    const users = await this.userRepository.findAll({ limit, offset });
-    if (users.length === 0) throw new NotFoundError(MSG.NO_USERS);
-    return users.map(this.toDto);
+export class UserService
+  extends BaseService<
+    UserDto,
+    User,
+    CreateUserInput,
+    UpdateUserInput,
+    UserFilter
+  >
+  implements IUserService
+{
+  constructor(private readonly userRepository: IUserRepository) {
+    super(userRepository);
   }
 
-  async getUser(filter: UserFilter): Promise<UserDto> {
-    const user = await this.userRepository.findOne(filter);
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
-    return this.toDto(user);
-  }
+  protected toDto = (u: User) => UserMapper.toDto(u);
 
-  async updateUser(id: string, data: UpdateUserInput): Promise<UserDto> {
-    const normalizedData = normalizeFields(data);
-    const user = await this.userRepository.update(id, normalizedData);
-
-    return this.toDto(user);
-  }
-
-  async updatePassword(id: string, data: UpdatePasswordInput): Promise<void> {
+  updatePassword = async (
+    id: string,
+    data: UpdatePasswordInput,
+  ): Promise<void> => {
     const { currentPassword, newPassword } = data;
     if (currentPassword === newPassword)
       throw new BadRequestError(MSG.NO_MATCH);
@@ -57,9 +51,5 @@ export class UserService implements IUserService {
 
     const hashed = await hash(newPassword, 10);
     await this.userRepository.updatePassword(id, hashed);
-  }
-
-  async deleteUser(id: string): Promise<void> {
-    await this.userRepository.delete(id);
-  }
+  };
 }
