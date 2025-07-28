@@ -8,10 +8,10 @@ import { prismaUserFilter } from "../utils/prisma-user.filter";
 import { IUserRepository } from "../interfaces/user-repository.interface";
 
 export class UserRepository
-  extends Repository<User, CreateUserInput, UpdateUserInput, UserFilter>
+  extends Repository<User, CreateUserInput, UpdateUserInput, UserFilter, "User">
   implements IUserRepository
 {
-  protected readonly modelName = "user" as const;
+  protected readonly modelName = "User" as const;
 
   protected toDomain = toDomainUser;
 

@@ -1,21 +1,24 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { IRepository } from "../interfaces/repository.interface";
+import { uncapitalize } from "../utils";
 
 export abstract class Repository<
   T,
   C = Partial<T>,
   U = Partial<T>,
-  F = Partial<T>
+  F = Partial<T>,
+  M extends Prisma.ModelName = Prisma.ModelName,
 > implements IRepository<T, C, U, F>
 {
-  protected abstract readonly modelName: keyof PrismaClient;
+  protected abstract readonly modelName: M;
 
   protected abstract toPrismaFilter(f: F): Record<string, any>;
 
   constructor(protected readonly prisma: PrismaClient) {}
 
   protected get delegate() {
-    return this.prisma[this.modelName] as any;
+    const key = uncapitalize(this.modelName) as Uncapitalize<M>;
+    return (this.prisma as any)[key];
   }
   protected abstract toDomain(raw: any): T;
 
