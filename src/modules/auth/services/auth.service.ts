@@ -35,7 +35,9 @@ export class AuthService implements IAuthService {
       this.userRepository.findOne({ username }),
     ]);
     if (byEmail || byUsername)
-      throw new ConflictError(byEmail ? MSG.EMAIL : MSG.USERNAME);
+      throw new ConflictError(
+        byEmail ? MSG.DUPLICATE("Email") : MSG.DUPLICATE("Username"),
+      );
   };
 
   private buildPayload = (
@@ -81,7 +83,7 @@ export class AuthService implements IAuthService {
   async login({ identifier, password }: LoginInput): Promise<TokenResponseDto> {
     const user = await this.userRepository.findByEmailOrUsername(identifier);
     if (!user || !(await compare(password, user.password)))
-      throw new UnauthorizedError(MSG.INVALID);
+      throw new UnauthorizedError(MSG.INVALID("credentials"));
 
     const payload = this.buildPayload(user);
 
@@ -96,7 +98,7 @@ export class AuthService implements IAuthService {
     };
 
     if (!tokens.refreshToken || !payload.jti)
-      throw new InternalServerError(MSG.NO_TOKEN);
+      throw new InternalServerError(MSG.NO_TOKEN());
 
     await this.storeRefresh(payload.userId, payload.jti, tokens.refreshToken);
     return tokens;
@@ -104,18 +106,19 @@ export class AuthService implements IAuthService {
 
   async refresh(refreshToken: string): Promise<TokenResponseDto> {
     const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
-    if (!payload.jti) throw new UnauthorizedError(MSG.NO_REFRESH);
+    if (!payload.jti)
+      throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
 
     const key = this.redisKey(payload.userId, payload.jti);
     const token = await redis.get(key);
     if (!token || token !== refreshToken) {
       await this.removeAllRefresh(payload.userId);
       logger.warn(`Possible token hijack - user ${payload.userId}`);
-      throw new UnauthorizedError(MSG.NO_REFRESH);
+      throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
     }
 
     const user = await this.userRepository.findOne({ id: payload.userId });
-    if (!user) throw new UnauthorizedError(MSG.INVALID);
+    if (!user) throw new UnauthorizedError(MSG.INVALID("credentials"));
 
     const newPayload = this.buildPayload(user);
 
@@ -130,7 +133,7 @@ export class AuthService implements IAuthService {
     };
 
     if (!tokens.refreshToken || !newPayload.jti)
-      throw new InternalServerError(MSG.NO_TOKEN);
+      throw new InternalServerError(MSG.NO_TOKEN());
 
     await this.removeRefresh(payload.userId, payload.jti);
     await this.storeRefresh(
@@ -144,7 +147,8 @@ export class AuthService implements IAuthService {
 
   async revoke(refreshToken: string): Promise<void> {
     const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
-    if (!payload.jti) throw new UnauthorizedError(MSG.NO_REFRESH);
+    if (!payload.jti)
+      throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
 
     await this.removeRefresh(payload.userId, payload.jti);
   }

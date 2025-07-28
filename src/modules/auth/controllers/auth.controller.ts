@@ -30,7 +30,7 @@ export class AuthController {
 
   private extractToken = (req: FastifyRequest): string => {
     const token = req.cookies.refreshToken;
-    if (!token) throw new UnauthorizedError(MSG.NO_REFRESH);
+    if (!token) throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
     return token;
   };
 
@@ -40,7 +40,7 @@ export class AuthController {
     reply: FastifyReply,
   ): Promise<void> => {
     await this.authService.register(req.body);
-    return sendReply(reply, 201, ResponseCode.CREATED, null, MSG.REGISTERED);
+    return sendReply(reply, 201, ResponseCode.CREATED, null, MSG.REGISTERED());
   };
 
   /* POST /auth/login */
@@ -52,13 +52,12 @@ export class AuthController {
       req.body,
     );
     this.setRefreshCookie(reply, refreshToken!);
-    return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.LOGIN);
+    return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.LOGIN());
   };
 
   /* POST /auth/refresh */
   refresh = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const refreshToken = this.extractToken(req);
-    if (!refreshToken) throw new UnauthorizedError(MSG.NO_REFRESH);
 
     const tokens = await this.authService.refresh(refreshToken);
     this.setRefreshCookie(reply, tokens.refreshToken!);
@@ -68,16 +67,15 @@ export class AuthController {
       200,
       ResponseCode.OK,
       { accessToken: tokens.accessToken },
-      MSG.REFRESH,
+      MSG.REFRESH(),
     );
   };
 
   /* POST /auth/logout */
   logout = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const refreshToken = this.extractToken(req);
-    if (!refreshToken) throw new UnauthorizedError(MSG.NO_REFRESH);
     await this.authService.revoke(refreshToken);
     this.clearRefreshCookie(reply);
-    return sendReply(reply, 204, ResponseCode.NO_CONTENT, null, MSG.LOGOUT);
+    return sendReply(reply, 204, ResponseCode.NO_CONTENT, null, MSG.LOGOUT());
   };
 }

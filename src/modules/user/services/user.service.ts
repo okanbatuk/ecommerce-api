@@ -41,13 +41,13 @@ export class UserService
   ): Promise<void> => {
     const { currentPassword, newPassword } = data;
     if (currentPassword === newPassword)
-      throw new BadRequestError(MSG.NO_MATCH);
+      throw new BadRequestError(MSG.NO_MATCH());
 
     const user = await this.userRepository.findOne({ id });
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND);
+    if (!user) throw new NotFoundError(MSG.NOT_FOUND("User"));
 
     const isValid = await compare(currentPassword, user!.password);
-    if (!isValid) throw new UnauthorizedError(MSG.INCORRECT);
+    if (!isValid) throw new UnauthorizedError(MSG.INCORRECT());
 
     const hashed = await hash(newPassword, 10);
     await this.userRepository.updatePassword(id, hashed);

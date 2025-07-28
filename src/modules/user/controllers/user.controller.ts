@@ -32,7 +32,7 @@ export class UserController {
   ): Promise<void> => {
     const user = await this.assertUserExists(req.params.id);
 
-    return sendReply(reply, 200, ResponseCode.OK, user, MSG.FOUND);
+    return sendReply(reply, 200, ResponseCode.OK, user, MSG.FOUND("User"));
   };
 
   /* GET /users?username=foo&email=bar@x.com&limit=20&offset=0 */
@@ -65,7 +65,7 @@ export class UserController {
       200,
       ResponseCode.OK,
       result,
-      hasFilter ? MSG.FOUND : MSG.ALL_USERS,
+      hasFilter ? MSG.FOUND("User") : MSG.ALL("Users"),
     );
   };
 
@@ -81,7 +81,13 @@ export class UserController {
       req.params.id,
       normalizeData,
     );
-    return sendReply(res, 200, ResponseCode.OK, updatedUser, MSG.UPDATED);
+    return sendReply(
+      res,
+      200,
+      ResponseCode.OK,
+      updatedUser,
+      MSG.UPDATED("User"),
+    );
   };
 
   /* PUT /users/:id/password  */
@@ -92,7 +98,7 @@ export class UserController {
     await this.assertUserExists(req.params.id);
     await this.userService.updatePassword(req.params.id, req.body);
     await this.authService.revokeAll(req.params.id);
-    return sendReply(res, 200, ResponseCode.OK, null, MSG.UPDATED);
+    return sendReply(res, 200, ResponseCode.OK, null, MSG.UPDATED("User"));
   };
 
   /* DELETE /users/:id */
@@ -103,6 +109,12 @@ export class UserController {
     await this.assertUserExists(req.params.id);
 
     await this.userService.delete(req.params.id);
-    return sendReply(res, 204, ResponseCode.NO_CONTENT, null, MSG.DELETED);
+    return sendReply(
+      res,
+      204,
+      ResponseCode.NO_CONTENT,
+      null,
+      MSG.DELETED("User"),
+    );
   };
 }

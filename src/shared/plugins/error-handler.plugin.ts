@@ -1,18 +1,23 @@
-import fp from "fastify-plugin";
 import { ZodError } from "zod";
+import fp from "fastify-plugin";
 import { Prisma } from "@prisma/client";
 import { FastifyInstance } from "fastify";
+import { logger } from "@/config";
+import { MSG } from "../constants";
 import { ResponseCode } from "../types/response-code";
 import { ApiResponse } from "../types/api-response";
 import { sendReply } from "../utils/send-response";
-import { logger } from "@/config";
 
 const prismaErrorMap: Record<
   string,
   { status: number; code: ResponseCode; msg: string }
 > = {
   P2002: { status: 409, code: ResponseCode.CONFLICT, msg: "Unique violation" },
-  P2025: { status: 404, code: ResponseCode.NOT_FOUND, msg: "Record not found" },
+  P2025: {
+    status: 404,
+    code: ResponseCode.NOT_FOUND,
+    msg: MSG.NOT_FOUND("Record"),
+  },
 };
 
 const customErrorMap: Record<string, { status: number; code: ResponseCode }> = {
@@ -79,7 +84,7 @@ export default fp(async (app: FastifyInstance) => {
       responseCode,
       undefined,
       message,
-      [message]
+      [message],
     );
   });
 });
