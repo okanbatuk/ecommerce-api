@@ -4,6 +4,7 @@ dotenv.config({
 });
 
 export const config = {
+  env: process.env.NODE_ENV! || "development",
   port: Number(process.env.PORT!) || 5000,
   db: { url: process.env.DATABASE_URL! },
   jwt: {

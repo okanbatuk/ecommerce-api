@@ -7,17 +7,23 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post(
     "/register",
-    { schema: { body: registerJsonSchema } },
-    authCtrl.register
+    {
+      schema: {
+        security: [{ bearerAuth: [] }],
+        body: registerJsonSchema,
+      },
+    },
+    authCtrl.register,
   );
   fastify.post(
     "/login",
     {
       schema: {
+        security: [{ bearerAuth: [] }],
         body: loginJsonSchema,
       },
     },
-    authCtrl.login
+    authCtrl.login,
   );
   fastify.post("/refresh", authCtrl.refresh);
   fastify.post("/logout", authCtrl.logout);

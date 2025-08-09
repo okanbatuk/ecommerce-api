@@ -4,14 +4,13 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "esbuild src/server.ts --bundle --platform=node --outdir=dist --minify --external:@fastify/* --external:bcryptjs --external:jsonwebtoken --external:pino --external:ioredis --alias:@=./src --alias:@config=./src/config --alias:@shared=./src/shared --alias:@modules=./src/modules",
     "start": "node dist/server.js",
     "dev": "bun --hot src/server.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.13.1",
   "dependencies": {
     "@fastify/auth": "^5.0.2",
     "@fastify/cookie": "^11.0.2",
@@ -35,6 +34,7 @@
     "@types/dotenv-safe": "^8.1.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.14",
+    "esbuild": "^0.25.8",
     "eslint": "^9.32.0",
     "pino-pretty": "^13.0.0",
     "prisma": "^6.12.0",

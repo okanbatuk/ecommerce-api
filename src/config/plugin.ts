@@ -30,27 +30,34 @@ export async function registerCommonPlugins(app: FastifyInstance) {
   await app.register(authPlugin);
   await app.register(validationHooks);
 
-  await app.register(fastifySwagger, {
-    openapi: {
-      info: {
-        title: "Fastify API",
-        description: "Fastify API documentation",
-        version: "0.1.0",
-      },
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: "http",
-            scheme: "bearer",
-            bearerFormat: "JWT",
+  if (config.env === "development") {
+    await app.register(fastifySwagger, {
+      openapi: {
+        info: {
+          title: "Fastify API",
+          version: "1.0.0",
+        },
+        components: {
+          securitySchemes: {
+            bearerAuth: {
+              type: "http",
+              scheme: "bearer",
+              bearerFormat: "JWT",
+            },
           },
         },
+        security: [{ bearerAuth: [] }],
       },
-    },
-  });
+    });
 
-  await app.register(fastifySwaggerUi, {
-    routePrefix: "/docs",
-    uiConfig: { docExpansion: "list", deepLinking: false },
-  });
+    await app.register(fastifySwaggerUi, {
+      routePrefix: "/docs",
+      uiConfig: {
+        docExpansion: "list",
+        deepLinking: false,
+      },
+      staticCSP: true,
+      transformStaticCSP: (header) => header,
+    });
+  }
 }
