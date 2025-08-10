@@ -1,4 +1,4 @@
 export const caseInsensitive = (str: string) => ({
-  equals: str,
+  contains: str,
   mode: "insensitive" as const,
 });

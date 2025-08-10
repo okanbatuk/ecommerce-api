@@ -2,7 +2,6 @@ import { compare, hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import {
   MSG,
-  normalizeFields,
   NotFoundError,
   BadRequestError,
   UnauthorizedError,

@@ -1,8 +1,7 @@
-// shared/services/base.service.ts
+import { MSG } from "../constants";
+import { NotFoundError } from "../exceptions";
 import { IService } from "@shared/interfaces/service.interface";
 import { IRepository } from "@shared/interfaces/repository.interface";
-import { ICreatable } from "../interfaces/creatable.interface";
-import { NotFoundError } from "../exceptions";
 
 export abstract class BaseService<
   T, // DTO
@@ -24,13 +23,24 @@ export abstract class BaseService<
     offset: number;
   }): Promise<T[]> {
     const rows = await this.repository.findAll({ limit, offset });
-    if (rows.length === 0) throw new NotFoundError("No records found");
+    if (rows.length === 0) throw new NotFoundError(MSG.NOT_FOUND("Records"));
+    return rows.map(this.toDto);
+  }
+
+  async findMany(
+    filter: F,
+    pagination?: { limit: number; offset: number },
+  ): Promise<T[]> {
+    const rows = await this.repository.findMany(filter, pagination);
+
+    if (rows.length === 0) throw new NotFoundError(MSG.NOT_FOUND("Records"));
+
     return rows.map(this.toDto);
   }
 
   async findOne(filter: F): Promise<T> {
     const row = await this.repository.findOne(filter);
-    if (!row) throw new NotFoundError("Record not found!");
+    if (!row) throw new NotFoundError(MSG.NOT_FOUND("Record"));
     return this.toDto(row);
   }
 

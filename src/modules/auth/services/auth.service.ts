@@ -4,19 +4,17 @@ import {
   MSG,
   Role,
   TokenType,
-  normalizeFields,
   UnauthorizedError,
   InternalServerError,
   ConflictError,
 } from "@/shared";
 import { TokenResponseDto } from "../dtos";
-import { User } from "@/modules/user/domain/user.entity";
 import { logger, config, redis } from "@/config";
 import { LoginInput, RegisterInput } from "../schemas";
+import { User } from "@/modules/user/domain/user.entity";
 import { IAuthService, IJwtService } from "../interfaces";
 import { JwtPayload } from "../types/jwt/jwt-payload.type";
 import { IUserRepository } from "@modules/user/interfaces/user-repository.interface";
-import { caseInsensitive } from "@/shared/lib";
 
 const REFRESH_TTL = Number(config.jwt.refreshExpiresIn) || 604_800;
 
@@ -70,9 +68,9 @@ export class AuthService implements IAuthService {
   };
 
   async register(dto: RegisterInput): Promise<void> {
-    const { email, username } = normalizeFields(dto);
+    const { email, username, password } = dto;
     await this.assertUnique(email, username);
-    const hashed = await hash(dto.password, 10);
+    const hashed = await hash(password, 10);
     await this.userRepository.create({
       ...dto,
       password: hashed,

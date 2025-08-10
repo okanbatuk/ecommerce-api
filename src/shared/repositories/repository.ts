@@ -10,11 +10,11 @@ export abstract class Repository<
   M extends Prisma.ModelName = Prisma.ModelName,
 > implements IRepository<T, C, U, F>
 {
+  constructor(protected readonly prisma: PrismaClient) {}
+
   protected abstract readonly modelName: M;
 
   protected abstract toPrismaFilter(f: F): Record<string, any>;
-
-  constructor(protected readonly prisma: PrismaClient) {}
 
   protected get delegate() {
     const key = uncapitalize(this.modelName) as Uncapitalize<M>;
@@ -36,6 +36,19 @@ export abstract class Repository<
     });
     return rows.map(this.toDomain);
   }
+
+  async findMany(
+    filter?: F | undefined,
+    pagination?: { limit: number; offset: number },
+  ): Promise<T[]> {
+    const rows = await this.delegate.findMany({
+      where: filter ? this.toPrismaFilter(filter) : {},
+      skip: pagination?.offset,
+      take: pagination?.limit,
+    });
+    return rows.map(this.toDomain);
+  }
+
   async findOne(filter: F): Promise<T | null> {
     const row = await this.delegate.findFirst({
       where: this.toPrismaFilter(filter),

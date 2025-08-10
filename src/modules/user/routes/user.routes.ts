@@ -1,14 +1,24 @@
 import { FastifyInstance } from "fastify";
 import { UserController } from "../controllers/user.controller";
 import { idParamJsonSchema } from "@shared/validations/id-param.schema";
-import { updatePasswordJsonSchema, updateUserJsonSchema } from "../schemas";
+import {
+  searchQueryJsonSchema,
+  updatePasswordJsonSchema,
+  updateUserJsonSchema,
+} from "../schemas";
 
 export default async function userRoutes(fastify: FastifyInstance) {
   const userCtrl = new UserController();
 
   fastify.addHook("preHandler", fastify.authenticate);
 
-  fastify.get("/", userCtrl.search);
+  fastify.get(
+    "/",
+    {
+      schema: { querystring: searchQueryJsonSchema },
+    },
+    userCtrl.search,
+  );
 
   fastify.get(
     "/:id",

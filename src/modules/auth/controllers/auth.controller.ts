@@ -4,8 +4,9 @@ import { JwtService } from "../services/jwt.service";
 import { AuthService } from "../services/auth.service";
 import { LoginInput, RegisterInput } from "../schemas";
 import { ServiceFactory } from "@shared/factories/service.factory";
-import { UserRepository } from "@modules/user/repositories/user.repository";
 import { MSG, sendReply, ResponseCode, UnauthorizedError } from "@/shared";
+import { UserRepository } from "@modules/user/repositories/user.repository";
+import { normalizeLoginFields, normalizeRegisterFields } from "../utils";
 
 export class AuthController {
   private readonly authService = ServiceFactory.getInstance(
@@ -39,7 +40,8 @@ export class AuthController {
     req: FastifyRequest<{ Body: RegisterInput }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    await this.authService.register(req.body);
+    const normalizedData = normalizeRegisterFields(req.body);
+    await this.authService.register(normalizedData);
     return sendReply(reply, 201, ResponseCode.CREATED, null, MSG.REGISTERED());
   };
 
@@ -48,9 +50,9 @@ export class AuthController {
     req: FastifyRequest<{ Body: LoginInput }>,
     reply: FastifyReply,
   ): Promise<void> => {
-    const { accessToken, refreshToken } = await this.authService.login(
-      req.body,
-    );
+    const normalizedData = normalizeLoginFields(req.body);
+    const { accessToken, refreshToken } =
+      await this.authService.login(normalizedData);
     this.setRefreshCookie(reply, refreshToken!);
     return sendReply(reply, 200, ResponseCode.OK, { accessToken }, MSG.LOGIN());
   };

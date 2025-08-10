@@ -1,14 +1,15 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { jwtConfig } from "@/config";
 import { UserDto } from "../dtos/user.dto";
+import { normalizeUpdateFields } from "../utils";
 import { UserFilter } from "../domain/user-filter";
 import { UserService } from "../services/user.service";
+import { ResponseCode, sendReply, MSG } from "@/shared";
 import { JwtService } from "@/modules/auth/services/jwt.service";
 import { UserRepository } from "../repositories/user.repository";
 import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
 import { AuthService } from "@/modules/auth/services/auth.service";
 import { ServiceFactory } from "@/shared/factories/service.factory";
-import { ResponseCode, sendReply, MSG, normalizeFields } from "@/shared";
 
 export class UserController {
   private readonly userService = ServiceFactory.getInstance(
@@ -57,16 +58,10 @@ export class UserController {
     const hasFilter = Object.keys(where).length > 0;
 
     const result = hasFilter
-      ? await this.userService.findOne(where)
+      ? await this.userService.findMany(where, { limit, offset })
       : await this.userService.findAll({ limit, offset });
 
-    return sendReply(
-      res,
-      200,
-      ResponseCode.OK,
-      result,
-      hasFilter ? MSG.FOUND("User") : MSG.ALL("Users"),
-    );
+    return sendReply(res, 200, ResponseCode.OK, result, MSG.ALL("Users"));
   };
 
   /* PUT /users/:id */
@@ -76,7 +71,7 @@ export class UserController {
   ): Promise<void> => {
     await this.assertUserExists(req.params.id);
 
-    const normalizeData = normalizeFields(req.body);
+    const normalizeData = normalizeUpdateFields(req.body);
     const updatedUser = await this.userService.update(
       req.params.id,
       normalizeData,
