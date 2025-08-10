@@ -1,4 +1,4 @@
-import { MSG } from "../constants";
+import { RES_MSG } from "../constants";
 import { NotFoundError } from "../exceptions";
 import { IService } from "@shared/interfaces/service.interface";
 import { IRepository } from "@shared/interfaces/repository.interface";
@@ -23,7 +23,8 @@ export abstract class BaseService<
     offset: number;
   }): Promise<T[]> {
     const rows = await this.repository.findAll({ limit, offset });
-    if (rows.length === 0) throw new NotFoundError(MSG.NOT_FOUND("Records"));
+    if (rows.length === 0)
+      throw new NotFoundError(RES_MSG.NOT_FOUND("Records"));
     return rows.map(this.toDto);
   }
 
@@ -33,23 +34,24 @@ export abstract class BaseService<
   ): Promise<T[]> {
     const rows = await this.repository.findMany(filter, pagination);
 
-    if (rows.length === 0) throw new NotFoundError(MSG.NOT_FOUND("Records"));
+    if (rows.length === 0)
+      throw new NotFoundError(RES_MSG.NOT_FOUND("Records"));
 
     return rows.map(this.toDto);
   }
 
   async findOne(filter: F): Promise<T> {
     const row = await this.repository.findOne(filter);
-    if (!row) throw new NotFoundError(MSG.NOT_FOUND("Record"));
+    if (!row) throw new NotFoundError(RES_MSG.NOT_FOUND("Record"));
     return this.toDto(row);
   }
 
-  async update(id: string, data: U): Promise<T> {
-    const row = await this.repository.update(id, data);
+  async update(id: string, refinedData: U): Promise<T> {
+    const row = await this.repository.update(id, refinedData);
     return this.toDto(row);
   }
 
   async delete(id: string): Promise<void> {
-    return this.repository.delete(id);
+    await this.repository.delete(id);
   }
 }

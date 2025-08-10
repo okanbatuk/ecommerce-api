@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { compare, hash } from "bcryptjs";
 import {
-  MSG,
+  RES_MSG,
   Role,
   TokenType,
   UnauthorizedError,
@@ -15,6 +15,7 @@ import { User } from "@/modules/user/domain/user.entity";
 import { IAuthService, IJwtService } from "../interfaces";
 import { JwtPayload } from "../types/jwt/jwt-payload.type";
 import { IUserRepository } from "@modules/user/interfaces/user-repository.interface";
+import { normalizeLoginFields, normalizeRegisterFields } from "../utils";
 
 const REFRESH_TTL = Number(config.jwt.refreshExpiresIn) || 604_800;
 
@@ -34,7 +35,7 @@ export class AuthService implements IAuthService {
     ]);
     if (byEmail || byUsername)
       throw new ConflictError(
-        byEmail ? MSG.DUPLICATE("Email") : MSG.DUPLICATE("Username"),
+        byEmail ? RES_MSG.DUPLICATE("Email") : RES_MSG.DUPLICATE("Username"),
       );
   };
 
@@ -67,21 +68,23 @@ export class AuthService implements IAuthService {
     if (keys.length) await Promise.all(keys.map((key) => redis.del(key)));
   };
 
-  async register(dto: RegisterInput): Promise<void> {
-    const { email, username, password } = dto;
+  async register(rawData: RegisterInput): Promise<void> {
+    const refinedData = normalizeRegisterFields(rawData);
+    const { email, username, password } = refinedData;
     await this.assertUnique(email, username);
     const hashed = await hash(password, 10);
     await this.userRepository.create({
-      ...dto,
+      ...refinedData,
       password: hashed,
       role: Role.USER,
     });
   }
 
-  async login({ identifier, password }: LoginInput): Promise<TokenResponseDto> {
+  async login(rawData: LoginInput): Promise<TokenResponseDto> {
+    const { identifier, password } = normalizeLoginFields(rawData);
     const user = await this.userRepository.findByEmailOrUsername(identifier);
     if (!user || !(await compare(password, user.password)))
-      throw new UnauthorizedError(MSG.INVALID("credentials"));
+      throw new UnauthorizedError(RES_MSG.INVALID("credentials"));
 
     const payload = this.buildPayload(user);
 
@@ -96,7 +99,7 @@ export class AuthService implements IAuthService {
     };
 
     if (!tokens.refreshToken || !payload.jti)
-      throw new InternalServerError(MSG.NO_TOKEN());
+      throw new InternalServerError(RES_MSG.NO_TOKEN());
 
     await this.storeRefresh(payload.userId, payload.jti, tokens.refreshToken);
     return tokens;
@@ -105,18 +108,18 @@ export class AuthService implements IAuthService {
   async refresh(refreshToken: string): Promise<TokenResponseDto> {
     const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
     if (!payload.jti)
-      throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
+      throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
 
     const key = this.redisKey(payload.userId, payload.jti);
     const token = await redis.get(key);
     if (!token || token !== refreshToken) {
       await this.removeAllRefresh(payload.userId);
       logger.warn(`Possible token hijack - user ${payload.userId}`);
-      throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
+      throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
     }
 
     const user = await this.userRepository.findOne({ id: payload.userId });
-    if (!user) throw new UnauthorizedError(MSG.INVALID("credentials"));
+    if (!user) throw new UnauthorizedError(RES_MSG.INVALID("credentials"));
 
     const newPayload = this.buildPayload(user);
 
@@ -131,7 +134,7 @@ export class AuthService implements IAuthService {
     };
 
     if (!tokens.refreshToken || !newPayload.jti)
-      throw new InternalServerError(MSG.NO_TOKEN());
+      throw new InternalServerError(RES_MSG.NO_TOKEN());
 
     await this.removeRefresh(payload.userId, payload.jti);
     await this.storeRefresh(
@@ -146,7 +149,7 @@ export class AuthService implements IAuthService {
   async revoke(refreshToken: string): Promise<void> {
     const payload = this.jwtService.verify(refreshToken, TokenType.REFRESH);
     if (!payload.jti)
-      throw new UnauthorizedError(MSG.NOT_FOUND("Refresh token"));
+      throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
 
     await this.removeRefresh(payload.userId, payload.jti);
   }

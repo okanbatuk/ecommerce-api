@@ -4,7 +4,7 @@ import { UserDto } from "../dtos/user.dto";
 import { normalizeUpdateFields } from "../utils";
 import { UserFilter } from "../domain/user-filter";
 import { UserService } from "../services/user.service";
-import { ResponseCode, sendReply, MSG } from "@/shared";
+import { ResponseCode, sendReply, RES_MSG } from "@/shared";
 import { JwtService } from "@/modules/auth/services/jwt.service";
 import { UserRepository } from "../repositories/user.repository";
 import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
@@ -33,7 +33,7 @@ export class UserController {
   ): Promise<void> => {
     const user = await this.assertUserExists(req.params.id);
 
-    return sendReply(reply, 200, ResponseCode.OK, user, MSG.FOUND("User"));
+    return sendReply(reply, 200, ResponseCode.OK, user, RES_MSG.FOUND("User"));
   };
 
   /* GET /users?username=foo&email=bar@x.com&limit=20&offset=0 */
@@ -61,7 +61,7 @@ export class UserController {
       ? await this.userService.findMany(where, { limit, offset })
       : await this.userService.findAll({ limit, offset });
 
-    return sendReply(res, 200, ResponseCode.OK, result, MSG.ALL("Users"));
+    return sendReply(res, 200, ResponseCode.OK, result, RES_MSG.ALL("Users"));
   };
 
   /* PUT /users/:id */
@@ -71,17 +71,17 @@ export class UserController {
   ): Promise<void> => {
     await this.assertUserExists(req.params.id);
 
-    const normalizeData = normalizeUpdateFields(req.body);
+    const refinedData = normalizeUpdateFields(req.body);
     const updatedUser = await this.userService.update(
       req.params.id,
-      normalizeData,
+      refinedData,
     );
     return sendReply(
       res,
       200,
       ResponseCode.OK,
       updatedUser,
-      MSG.UPDATED("User"),
+      RES_MSG.UPDATED("User"),
     );
   };
 
@@ -93,7 +93,13 @@ export class UserController {
     await this.assertUserExists(req.params.id);
     await this.userService.updatePassword(req.params.id, req.body);
     await this.authService.revokeAll(req.params.id);
-    return sendReply(res, 200, ResponseCode.OK, null, MSG.UPDATED("User"));
+    return sendReply(
+      res,
+      200,
+      ResponseCode.NO_CONTENT,
+      null,
+      RES_MSG.UPDATED("User"),
+    );
   };
 
   /* DELETE /users/:id */
@@ -101,15 +107,17 @@ export class UserController {
     req: FastifyRequest<{ Params: { id: string } }>,
     res: FastifyReply,
   ): Promise<void> => {
-    await this.assertUserExists(req.params.id);
+    const { id } = req.params;
+    await this.assertUserExists(id);
 
-    await this.userService.delete(req.params.id);
+    await this.userService.delete(id);
+    await this.authService.revokeAll(id);
     return sendReply(
       res,
-      204,
+      200,
       ResponseCode.NO_CONTENT,
       null,
-      MSG.DELETED("User"),
+      RES_MSG.DELETED("User"),
     );
   };
 }

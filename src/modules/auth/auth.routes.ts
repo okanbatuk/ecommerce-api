@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
-import { AuthController } from "../controllers/auth.controller";
-import { loginJsonSchema, registerJsonSchema } from "../schemas";
+import { AuthController } from "./controllers/auth.controller";
+import { loginJsonSchema, registerJsonSchema } from "./schemas";
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const authCtrl = new AuthController();
@@ -9,7 +9,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
     "/register",
     {
       schema: {
-        security: [{ bearerAuth: [] }],
         body: registerJsonSchema,
       },
     },

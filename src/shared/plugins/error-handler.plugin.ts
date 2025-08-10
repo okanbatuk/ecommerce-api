@@ -3,7 +3,7 @@ import fp from "fastify-plugin";
 import { Prisma } from "@prisma/client";
 import { FastifyInstance } from "fastify";
 import { logger } from "@/config";
-import { MSG } from "../constants";
+import { RES_MSG } from "@/shared";
 import { ResponseCode } from "../types/response-code";
 import { ApiResponse } from "../types/api-response";
 import { sendReply } from "../utils/send-response";
@@ -16,7 +16,7 @@ const prismaErrorMap: Record<
   P2025: {
     status: 404,
     code: ResponseCode.NOT_FOUND,
-    msg: MSG.NOT_FOUND("Record"),
+    msg: RES_MSG.NOT_FOUND("Record"),
   },
 };
 

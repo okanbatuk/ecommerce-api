@@ -1,22 +1,21 @@
 import { compare, hash } from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import {
-  MSG,
+  RES_MSG,
   NotFoundError,
   BadRequestError,
   UnauthorizedError,
 } from "@/shared";
-import { UserDto } from "../dtos/user.dto";
-import { User } from "../domain/user.entity";
-import { UserFilter } from "../domain/user-filter";
-import { UserMapper } from "../mappers/user-dto.mapper";
-import { IUserRepository, IUserService } from "../interfaces";
 import {
   CreateUserInput,
   UpdatePasswordInput,
   UpdateUserInput,
 } from "../schemas";
+import { UserMapper } from "../mappers";
+import { User, UserFilter } from "../domain";
+import { UserDto } from "../dtos/user.dto";
 import { BaseService } from "@/shared/services/base.service";
+import { IUserRepository, IUserService } from "../interfaces";
 
 export class UserService
   extends BaseService<
@@ -39,14 +38,12 @@ export class UserService
     data: UpdatePasswordInput,
   ): Promise<void> => {
     const { currentPassword, newPassword } = data;
-    if (currentPassword === newPassword)
-      throw new BadRequestError(MSG.NO_MATCH());
 
     const user = await this.userRepository.findOne({ id });
-    if (!user) throw new NotFoundError(MSG.NOT_FOUND("User"));
+    if (!user) throw new NotFoundError(RES_MSG.NOT_FOUND("User"));
 
     const isValid = await compare(currentPassword, user!.password);
-    if (!isValid) throw new UnauthorizedError(MSG.INCORRECT());
+    if (!isValid) throw new UnauthorizedError(RES_MSG.INCORRECT());
 
     const hashed = await hash(newPassword, 10);
     await this.userRepository.updatePassword(id, hashed);

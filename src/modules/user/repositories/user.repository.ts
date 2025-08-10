@@ -1,11 +1,10 @@
 import { toDomainUser } from "../mappers";
-import { User } from "../domain/user.entity";
-import { UserFilter } from "../domain/user-filter";
+import { prismaUserFilter } from "../utils";
+import { User, UserFilter } from "../domain";
+import { IUserRepository } from "../interfaces";
 import { caseInsensitive, prisma } from "@/shared/lib";
 import { Repository } from "@shared/repositories/repository";
 import { CreateUserInput, UpdateUserInput } from "../schemas";
-import { prismaUserFilter } from "../utils/prisma-user.filter";
-import { IUserRepository } from "../interfaces/user-repository.interface";
 
 export class UserRepository
   extends Repository<User, CreateUserInput, UpdateUserInput, UserFilter, "User">

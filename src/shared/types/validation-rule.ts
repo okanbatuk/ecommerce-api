@@ -2,6 +2,6 @@ import { z } from "zod";
 
 export type Rule = {
   method: string;
-  pathPrefix: string;
+  pathRegex: RegExp;
   schema: z.ZodSchema<any>;
 };

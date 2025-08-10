@@ -1,29 +1,22 @@
 import { z } from "zod";
 import zodToJsonSchema from "zod-to-json-schema";
+import { VAL_MSG } from "@/shared";
 
 const usernameSchema = z
   .string()
-  .min(3, "Username must be at least 3 characters long")
-  .max(30, "Username must not exceed 30 characters")
-  .regex(
-    /^[a-zA-Z0-9_]+$/,
-    "Username can only contain letters, numbers, and underscores"
-  );
+  .min(3, VAL_MSG.MIN("Username"))
+  .max(30, VAL_MSG.MAX("Username", 30))
+  .regex(/^[a-zA-Z0-9_]+$/, VAL_MSG.USERNAME());
 
-const emailSchema = z
-  .string()
-  .email({ message: "Please provide a valid email address" });
+const emailSchema = z.string().email({ message: VAL_MSG.EMAIL() });
 
 export const loginSchema = z
   .object({
     identifier: z.union([usernameSchema, emailSchema]),
     password: z
       .string()
-      .min(8, "Password must be at least 8 characters long")
-      .regex(
-        /(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/,
-        "Password must include at least one uppercase letter, one lowercase letter and one number"
-      ),
+      .min(8, VAL_MSG.MIN("Password", 8))
+      .regex(/(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/, VAL_MSG.PASSWORD()),
   })
   .strict()
   .required();
