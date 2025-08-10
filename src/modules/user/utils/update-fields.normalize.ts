@@ -1,5 +1,4 @@
 import {
-  createNormalizers,
   toTitleCase,
   toTrimLower,
   normalizeFields,
@@ -7,16 +6,14 @@ import {
 } from "@/shared";
 import { UpdateUserInput } from "../schemas";
 
-const keys = ["firstName", "lastName"] as const;
-
-const updateMap: NormalizersMap<UpdateUserInput> = {
-  ...createNormalizers<{ username: string }>(["username"], toTrimLower),
-  ...createNormalizers<{ firstName: string; lastName: string }>(
-    keys,
-    toTitleCase,
-  ),
-};
+const updateMap = (
+  input: Partial<UpdateUserInput>,
+): NormalizersMap<UpdateUserInput> => ({
+  username: input.username ? toTrimLower : undefined,
+  firstName: input.firstName ? toTitleCase : undefined,
+  lastName: input.lastName ? toTitleCase : undefined,
+});
 
 export const normalizeUpdateFields = (
   updateUser: UpdateUserInput,
-): UpdateUserInput => normalizeFields(updateUser, updateMap);
+): UpdateUserInput => normalizeFields(updateUser, updateMap(updateUser));

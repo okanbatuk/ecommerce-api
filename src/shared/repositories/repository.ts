@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { uncapitalize } from "../formatters";
 import { IRepository } from "../interfaces/repository.interface";
-import { uncapitalize } from "../utils";
 
 export abstract class Repository<
   T,

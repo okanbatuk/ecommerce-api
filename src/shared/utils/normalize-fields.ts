@@ -1,6 +1,6 @@
 // Takes a value of type T and returns a value of the same type T.
 // Example trimLower = (value:string) => value.trim().toLowerCase();
-export type Normalizer<T> = (value: T) => T;
+export type Normalizer<T> = (value: NonNullable<T>) => NonNullable<T>;
 
 /**
  * Represents a map of keys from T to Normalizer functions. Each key in the map corresponds to a key in T, and the value is an optional Normalizer function for that key.
@@ -9,7 +9,7 @@ export type Normalizer<T> = (value: T) => T;
  * - email: trimLower(User[email])
  */
 export type NormalizersMap<T> = {
-  [Key in keyof T]?: Normalizer<T[Key]>;
+  [Key in keyof T]?: Normalizer<NonNullable<T[Key]>>;
 };
 
 /**
@@ -22,13 +22,19 @@ export function normalizeFields<T>(
   input: T,
   normalizers: NormalizersMap<T>,
 ): T {
-  const output = { ...input };
+  const output = {} as T;
 
-  for (let key in normalizers) {
-    const normalizer = normalizers[key];
-    if (input[key] !== undefined && normalizer) {
-      output[key] = normalizer(input[key]);
-    }
+  for (const key in input) {
+    if (!Object.prototype.hasOwnProperty.call(input, key)) continue;
+
+    const value = input[key as keyof T];
+    if (value == null) continue;
+
+    const normalizer = normalizers[key as keyof T];
+
+    output[key as keyof T] = normalizer
+      ? normalizer(value as NonNullable<typeof value>)
+      : value;
   }
 
   return output;

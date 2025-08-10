@@ -1,14 +1,9 @@
-import {
-  createNormalizers,
-  normalizeFields,
-  toTrimLower,
-  NormalizersMap,
-} from "@/shared";
+import { normalizeFields, toTrimLower, NormalizersMap } from "@/shared";
 import { LoginInput } from "../schemas";
 
-const loginMap: NormalizersMap<LoginInput> = {
-  ...createNormalizers<{ identifier: string }>(["identifier"], toTrimLower),
-};
+const loginMap = (input: Partial<LoginInput>): NormalizersMap<LoginInput> => ({
+  identifier: input.identifier ? toTrimLower : undefined,
+});
 
 export const normalizeLoginFields = (loginUser: LoginInput): LoginInput =>
-  normalizeFields(loginUser, loginMap);
+  normalizeFields(loginUser, loginMap(loginUser));
