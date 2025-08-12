@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/server.ts",
   "scripts": {
-    "build": "esbuild src/server.ts --bundle --platform=node --outdir=dist --minify --external:@fastify/* --external:bcryptjs --external:jsonwebtoken --external:pino --external:ioredis --alias:@=./src --alias:@config=./src/config --alias:@shared=./src/shared --alias:@modules=./src/modules",
+    "build": "esbuild src/server.ts --bundle --platform=node --outdir=dist --minify --sourcemap --external:@fastify/* --external:bcryptjs --external:jsonwebtoken --external:pino --external:ioredis --alias:@=./src --alias:@config=./src/config --alias:@shared=./src/shared --alias:@modules=./src/modules",
     "start": "node dist/server.js",
     "dev": "bun --hot src/server.ts"
   },
