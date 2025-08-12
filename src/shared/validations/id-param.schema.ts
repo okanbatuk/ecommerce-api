@@ -6,3 +6,5 @@ export const idParamSchema = z.object({
 });
 
 export const idParamJsonSchema = zodToJsonSchema(idParamSchema);
+
+export type idParamType = z.infer<typeof idParamSchema>;

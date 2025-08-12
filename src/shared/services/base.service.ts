@@ -1,3 +1,4 @@
+import { Pagination } from "../types";
 import { RES_MSG } from "../constants";
 import { NotFoundError } from "../exceptions";
 import { IService } from "@shared/interfaces/service.interface";
@@ -15,23 +16,14 @@ export abstract class BaseService<
 
   protected abstract toDto(entity: E): T;
 
-  async findAll({
-    limit,
-    offset,
-  }: {
-    limit: number;
-    offset: number;
-  }): Promise<T[]> {
+  async findAll({ limit, offset }: Pagination): Promise<T[]> {
     const rows = await this.repository.findAll({ limit, offset });
     if (rows.length === 0)
       throw new NotFoundError(RES_MSG.NOT_FOUND("Records"));
     return rows.map(this.toDto);
   }
 
-  async findMany(
-    filter: F,
-    pagination?: { limit: number; offset: number },
-  ): Promise<T[]> {
+  async findMany(filter: F, pagination?: Pagination): Promise<T[]> {
     const rows = await this.repository.findMany(filter, pagination);
 
     if (rows.length === 0)

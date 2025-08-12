@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { Pagination } from "../types";
+import { IRepository } from "../interfaces";
 import { uncapitalize } from "../formatters";
-import { IRepository } from "../interfaces/repository.interface";
 
 export abstract class Repository<
   T,
@@ -22,13 +23,15 @@ export abstract class Repository<
   }
   protected abstract toDomain(raw: any): T;
 
-  async findAll({
-    limit,
-    offset,
-  }: {
-    limit: number;
-    offset: number;
-  }): Promise<T[]> {
+  async findAll(pagination?: Pagination): Promise<T[]> {
+    const { limit, offset } = pagination
+      ? Object.fromEntries(
+          Object.entries(pagination).map(([key, value]) => [
+            key,
+            Number(value),
+          ]),
+        )
+      : { limit: 20, offset: 0 };
     const rows = await this.delegate.findMany({
       take: limit,
       skip: offset,
@@ -41,10 +44,18 @@ export abstract class Repository<
     filter?: F | undefined,
     pagination?: { limit: number; offset: number },
   ): Promise<T[]> {
+    const { limit, offset } = pagination
+      ? Object.fromEntries(
+          Object.entries(pagination).map(([key, value]) => [
+            key,
+            Number(value),
+          ]),
+        )
+      : { limit: 20, offset: 0 };
     const rows = await this.delegate.findMany({
       where: filter ? this.toPrismaFilter(filter) : {},
-      skip: pagination?.offset,
-      take: pagination?.limit,
+      skip: offset,
+      take: limit,
     });
     return rows.map(this.toDomain);
   }

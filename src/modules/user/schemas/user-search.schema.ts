@@ -13,3 +13,5 @@ export const UserSearchQuerySchema = z.object({
 });
 
 export const searchQueryJsonSchema = zodToJsonSchema(UserSearchQuerySchema);
+
+export type userSearchQueryType = z.infer<typeof UserSearchQuerySchema>;
