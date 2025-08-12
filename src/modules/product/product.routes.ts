@@ -1,12 +1,17 @@
 import { FastifyInstance } from "fastify";
 import {
+  AddProductInput,
   addProductJsonSchema,
   searchQueryJsonSchema,
   slugParamJsonSchema,
+  UpdateProductInput,
   updateProductJsonSchema,
 } from "./schemas";
+import {
+  idParamType,
+  idParamJsonSchema,
+} from "@/shared/validations/id-param.schema";
 import { ProductController } from "./controllers/product.controller";
-import { idParamJsonSchema } from "@/shared/validations/id-param.schema";
 
 const productRoutes = (fastify: FastifyInstance) => {
   const ctrl = new ProductController();
@@ -21,21 +26,32 @@ const productRoutes = (fastify: FastifyInstance) => {
       { schema: { params: slugParamJsonSchema } },
       ctrl.getBySlug,
     )
-    .post(
+    .post<{ Body: AddProductInput }>(
       "/",
       {
-        // preHandler: [fastify.assertAdmin],
+        preHandler: fastify.assertAdmin,
         schema: { body: addProductJsonSchema },
       },
       ctrl.create,
     )
-    .patch(
+    .patch<{ Params: idParamType; Body: UpdateProductInput }>(
       "/:id",
       {
-        // preHandler: [fastify.assertAdmin],
-        schema: { body: updateProductJsonSchema },
+        preHandler: fastify.assertAdmin,
+        schema: {
+          params: idParamJsonSchema,
+          body: updateProductJsonSchema,
+        },
       },
       ctrl.update,
+    )
+    .delete<{ Params: { id: string } }>(
+      "/:id",
+      {
+        preHandler: fastify.assertAdmin,
+        schema: { params: idParamJsonSchema },
+      },
+      ctrl.delete,
     );
 };
 

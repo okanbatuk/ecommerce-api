@@ -1,5 +1,6 @@
 import "@fastify/jwt";
 import { JwtPayload } from "@/modules/auth/types/jwt";
+import { RouteGenericInterface } from "fastify";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {
@@ -13,10 +14,24 @@ declare module "fastify" {
   }
 
   interface FastifyInstance {
-    authenticate: (req: FastifyRequest) => Promise<void>;
-    assertOwnUser: (
-      req: FastifyRequest<{ Params: { id: string } }>,
+    authenticate: <T extends RouteGenericInterface = RouteGenericInterface>(
+      req: FastifyRequest<T>,
+      reply: FastifyReply,
     ) => Promise<void>;
-    assertAdmin: (req: FastifyRequest) => Promise<void>;
+
+    assertOwnUser: <T extends FastifyRequest<{ Params: { id: string } }>>(
+      req: T,
+      reply: FastifyReply,
+    ) => Promise<void>;
+
+    assertAdmin: <T extends FastifyRequest = FastifyRequest>(
+      req: T,
+      reply: FastifyReply,
+    ) => Promise<void>;
+
+    assertAdminOrSelf: <T extends FastifyRequest<{ Params: { id: string } }>>(
+      req: T,
+      reply: FastifyReply,
+    ) => Promise<void>;
   }
 }

@@ -3,6 +3,7 @@ import {
   searchQueryJsonSchema,
   updatePasswordJsonSchema,
   updateUserJsonSchema,
+  userSearchQueryType,
 } from "./schemas";
 import { UserController } from "./controllers/user.controller";
 import { idParamJsonSchema } from "@shared/validations/id-param.schema";
@@ -12,9 +13,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   fastify.addHook("preHandler", fastify.authenticate);
 
-  fastify.get(
+  fastify.get<{ Querystring: userSearchQueryType }>(
     "/",
     {
+      preHandler: fastify.assertAdmin,
       schema: { querystring: searchQueryJsonSchema },
     },
     userCtrl.search,
@@ -23,6 +25,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
   fastify.get(
     "/:id",
     {
+      preHandler: fastify.assertAdminOrSelf,
       schema: {
         params: idParamJsonSchema,
       },
@@ -33,7 +36,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
   fastify.put(
     "/:id",
     {
-      preHandler: fastify.assertOwnUser,
+      preHandler: fastify.assertAdminOrSelf,
       schema: {
         params: idParamJsonSchema,
         body: updateUserJsonSchema,
@@ -57,7 +60,7 @@ export default async function userRoutes(fastify: FastifyInstance) {
   fastify.delete(
     "/:id",
     {
-      preHandler: fastify.assertOwnUser,
+      preHandler: fastify.assertAdminOrSelf,
       schema: {
         params: idParamJsonSchema,
       },
