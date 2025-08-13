@@ -1,11 +1,13 @@
 import {
   FastifyInstance,
+  FastifyReply,
   FastifyRequest,
   RouteGenericInterface,
 } from "fastify";
 import fp from "fastify-plugin";
-import { Role } from "../constants";
-import { FastifyReply } from "fastify/types/reply";
+import { logger } from "@/config";
+import { RES_MSG, Role } from "../constants";
+import { JwtPayload } from "@/modules/auth/types/jwt";
 import { ForbiddenError, UnauthorizedError } from "../exceptions";
 
 export default fp(async (fastify: FastifyInstance) => {
@@ -13,8 +15,32 @@ export default fp(async (fastify: FastifyInstance) => {
     "authenticate",
     async (req: FastifyRequest, reply: FastifyReply) => {
       try {
-        await req.jwtVerify();
+        const payload = await req.jwtVerify<JwtPayload>();
+
+        // Check Token Version
+        const tokenVersion = await fastify.userRepo.getTokenVersion(
+          payload.userId,
+        );
+        if (payload.ver !== tokenVersion) {
+          logger.warn(
+            `[Auth.authenticate] Token revoked. Expected=${tokenVersion} Received=${payload.ver}`,
+          );
+          throw new UnauthorizedError(RES_MSG.REVOKED("Token"));
+        }
+
+        // Compare deviceId
+        const exists = await fastify.redis.exists(
+          `refresh:${payload.userId}:${payload.deviceId}`,
+        );
+        if (!exists) {
+          logger.warn(
+            `[Auth.authenticate] Device revoked. userId=${payload.userId} deviceId=${payload.deviceId}`,
+          );
+          throw new UnauthorizedError(RES_MSG.REVOKED("Device"));
+        }
       } catch (err) {
+        if (err instanceof UnauthorizedError) throw err;
+        logger.warn("[Auth.authenticate] JWT verification failed");
         throw new UnauthorizedError("Unauthorized Error!!");
       }
     },
@@ -27,6 +53,9 @@ export default fp(async (fastify: FastifyInstance) => {
       reply: FastifyReply,
     ) => {
       if (req.user.userId !== req.params.id) {
+        logger.warn(
+          `[Auth.assertOwnUser] Access denied. userId=${req.user.userId} paramId=${req.params.id}`,
+        );
         throw new ForbiddenError();
       }
     },
@@ -38,8 +67,12 @@ export default fp(async (fastify: FastifyInstance) => {
       req: FastifyRequest<T>,
       reply: FastifyReply,
     ) => {
-      if (req.user.role !== Role.ADMIN)
+      if (req.user.role !== Role.ADMIN) {
+        logger.warn(
+          `[Auth.assertAdmin] Admin required. username=${req.user.username} role=${req.user.role}`,
+        );
         throw new ForbiddenError("Admin required");
+      }
     },
   );
 
@@ -50,7 +83,12 @@ export default fp(async (fastify: FastifyInstance) => {
       reply: FastifyReply,
     ) => {
       if (req.user.role === Role.ADMIN) return;
-      if (req.user.userId !== req.params.id) throw new ForbiddenError();
+      if (req.user.userId !== req.params.id) {
+        logger.warn(
+          `[Auth.assertAdminOrSelf] Access denied. userId=${req.user.userId}  paramId=${req.params.id}`,
+        );
+        throw new ForbiddenError();
+      }
     },
   );
 });

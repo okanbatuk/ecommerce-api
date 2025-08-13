@@ -15,6 +15,7 @@ export const RES_MSG = {
   NOT_FOUND: (entity: string = "Resource") => `${entity} not found.`,
   DUPLICATE: (field: string = "Field") => `${field} already in use.`,
   INVALID: (field: string = "field") => `Invalid ${field}.`,
+  REVOKED: (field: string = "Field") => `${field} revoked.`,
   INCORRECT: () => "Current password incorrect.",
   NO_MATCH: () => "New password cannot be the same as the current password.",
   SERVER: () => "Something went wrong.",

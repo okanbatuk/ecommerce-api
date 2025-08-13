@@ -1,5 +1,6 @@
+import { randomUUID } from "crypto";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { config, jwtConfig } from "@/config";
+import { config, jwtConfig, logger } from "@/config";
 import { JwtService } from "../services/jwt.service";
 import { AuthService } from "../services/auth.service";
 import { LoginInput, RegisterInput } from "../schemas";
@@ -14,6 +15,15 @@ export class AuthController {
     UserRepository,
     new JwtService(jwtConfig),
   );
+
+  private setDidCookie = (reply: FastifyReply, deviceId: string): void => {
+    reply.setCookie("did", deviceId, {
+      httpOnly: false,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 365 * 24 * 3600,
+    });
+  };
 
   private setRefreshCookie = (reply: FastifyReply, token: string): void => {
     reply.setCookie("refreshToken", token, {
@@ -31,7 +41,10 @@ export class AuthController {
 
   private extractToken = (req: FastifyRequest): string => {
     const token = req.cookies.refreshToken;
-    if (!token) throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
+    if (!token) {
+      logger.warn(`[AuthController.refresh] Token not found in cookies`);
+      throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
+    }
     return token;
   };
 
@@ -40,6 +53,10 @@ export class AuthController {
     req: FastifyRequest<{ Body: RegisterInput }>,
     reply: FastifyReply,
   ): Promise<void> => {
+    logger.info(
+      `[AuthController.register] username: ${req.body.username} ` +
+        `email: ${req.body.email}`,
+    );
     await this.authService.register(req.body);
     return sendReply(
       reply,
@@ -55,9 +72,18 @@ export class AuthController {
     req: FastifyRequest<{ Body: LoginInput }>,
     reply: FastifyReply,
   ): Promise<void> => {
+    logger.info(
+      `[AuthController.login] user identifier: ${req.body.identifier}`,
+    );
+    const raw = req.headers["x-device=id"];
+    const deviceId =
+      (Array.isArray(raw) ? raw[0] : raw) ?? req.cookies.did ?? randomUUID();
     const { accessToken, refreshToken } = await this.authService.login(
       req.body,
+      deviceId,
     );
+
+    this.setDidCookie(reply, deviceId);
     this.setRefreshCookie(reply, refreshToken!);
     return sendReply(
       reply,
@@ -70,16 +96,16 @@ export class AuthController {
 
   /* POST /auth/refresh */
   refresh = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    const refreshToken = this.extractToken(req);
+    logger.info(`[AuthController.refresh]`);
 
-    const tokens = await this.authService.refresh(refreshToken);
-    this.setRefreshCookie(reply, tokens.refreshToken!);
+    const refreshToken = this.extractToken(req);
+    const { accessToken } = await this.authService.refresh(refreshToken);
 
     return sendReply(
       reply,
       200,
       ResponseCode.OK,
-      { accessToken: tokens.accessToken },
+      { accessToken },
       RES_MSG.REFRESH(),
     );
   };
@@ -87,11 +113,11 @@ export class AuthController {
   /* POST /auth/logout */
   logout = async (req: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const refreshToken = this.extractToken(req);
-    await this.authService.revoke(refreshToken);
     this.clearRefreshCookie(reply);
+    await this.authService.revoke(refreshToken);
     return sendReply(
       reply,
-      204,
+      200,
       ResponseCode.NO_CONTENT,
       null,
       RES_MSG.LOGOUT(),

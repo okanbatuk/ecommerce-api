@@ -1,4 +1,3 @@
-import { randomUUID } from "crypto";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { IJwtService } from "../interfaces";
 import { JwtConfig, JwtPayload, TokenType } from "../types/jwt";
@@ -19,19 +18,10 @@ export class JwtService implements IJwtService {
       : { secret: this.cfg.refreshSecret, expires: this.cfg.refreshExpiresIn };
   }
 
-  sign(
-    payload: JwtPayload,
-    opts: { customJti?: string; tokenType?: TokenType }
-  ): string {
-    const { customJti, tokenType = "access" } = opts;
+  sign(payload: JwtPayload, tokenType: TokenType = "access"): string {
     const { secret, expires } = this.pick(tokenType);
 
-    const finalPayload: JwtPayload =
-      tokenType === "access"
-        ? payload
-        : { ...payload, jti: customJti ?? randomUUID() };
-
-    return jwt.sign(finalPayload, secret, {
+    return jwt.sign(payload, secret, {
       expiresIn: expires,
       issuer: this.cfg.issuer,
       audience: this.cfg.audience,
@@ -49,6 +39,6 @@ export class JwtService implements IJwtService {
     const payload = this.verify(token, "refresh");
     delete payload.iat; // Remove issued at timestamp
     delete payload.exp; // Remove expiration timestamp
-    return this.sign(payload, { tokenType: "access" });
+    return this.sign(payload, "access");
   }
 }

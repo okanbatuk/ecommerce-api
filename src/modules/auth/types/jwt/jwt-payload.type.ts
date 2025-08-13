@@ -5,7 +5,8 @@ export type JwtPayload = {
   email: string;
   username: string;
   role: Role;
-  jti?: string;
+  deviceId: string;
+  ver?: number;
   iat?: number;
   exp?: number;
 };

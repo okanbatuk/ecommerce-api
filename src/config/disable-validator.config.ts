@@ -1,9 +1,10 @@
+import fp from "fastify-plugin";
 import { FastifyInstance } from "fastify";
 
-export function disablePlugins(app: FastifyInstance) {
+export default fp(async (app: FastifyInstance) => {
   app.setValidatorCompiler(() => {
     return (data) => {
       return { value: data };
     };
   });
-}
+});

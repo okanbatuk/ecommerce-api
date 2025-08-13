@@ -1,14 +1,15 @@
 import Fastify from "fastify";
-import { registerRoutes } from "./config/routes.config";
-import { registerCommonPlugins } from "./config/plugin";
+import { registerRoutes, registerCommonPlugins } from "./config";
+import decoratorPlugin from "./config/context";
+import disableValidator from "./config/disable-validator.config";
 import errorHandlerPlugin from "./shared/plugins/error-handler.plugin";
-import { disablePlugins } from "./config/disable-plugin.config";
 
 export async function buildApp() {
   const app = Fastify({ logger: true });
 
-  disablePlugins(app);
+  await disableValidator(app);
   await registerCommonPlugins(app);
+  await app.register(decoratorPlugin);
   await app.register(errorHandlerPlugin);
   await registerRoutes(app);
 

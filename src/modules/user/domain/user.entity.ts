@@ -6,6 +6,7 @@ export type User = {
   firstName?: string;
   lastName?: string;
   role: "ADMIN" | "USER";
+  tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -9,6 +9,7 @@ export const toDomainUser = (p: PrismaUser): User => ({
   firstName: p.firstName ?? undefined,
   lastName: p.lastName ?? undefined,
   role: p.role as "USER" | "ADMIN",
+  tokenVersion: p.tokenVersion,
   createdAt: p.createdAt,
   updatedAt: p.updatedAt,
 });

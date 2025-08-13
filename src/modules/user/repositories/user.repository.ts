@@ -10,6 +10,13 @@ export class UserRepository
   extends Repository<User, CreateUserInput, UpdateUserInput, UserFilter, "User">
   implements IUserRepository
 {
+  private static _instance: UserRepository;
+
+  // Get User Repository instance Singleton
+  static getInstance(): UserRepository {
+    return (this._instance ||= new UserRepository());
+  }
+
   protected readonly modelName = "User" as const;
 
   protected toDomain = toDomainUser;
@@ -20,6 +27,14 @@ export class UserRepository
 
   constructor() {
     super(prisma);
+  }
+
+  async getTokenVersion(id: string): Promise<number | null> {
+    const row = await this.delegate.findFirst({
+      where: { id },
+      select: { tokenVersion: true },
+    });
+    return row?.tokenVersion ?? null;
   }
 
   async findByEmailOrUsername(identifier: string): Promise<User | null> {
@@ -33,6 +48,14 @@ export class UserRepository
     });
     return row ? this.toDomain(row) : null;
   }
+
+  async incrementTokenVersion(id: string): Promise<void> {
+    await this.delegate.update({
+      where: { id },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  }
+
   async updatePassword(id: string, password: string): Promise<void> {
     await this.delegate.update({
       where: { id },
