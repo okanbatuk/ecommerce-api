@@ -7,8 +7,8 @@ import {
 import fp from "fastify-plugin";
 import { logger } from "@/config";
 import { RES_MSG, Role } from "../constants";
-import { JwtPayload } from "@/modules/auth/types/jwt";
 import { ForbiddenError, UnauthorizedError } from "../exceptions";
+import type { JwtPayload } from "@/modules/auth/types/jwt/jwt-payload.type";
 
 export default fp(async (fastify: FastifyInstance) => {
   fastify.decorate(

@@ -1,3 +1,4 @@
+import { inject, injectable } from "inversify";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { ProductSearchFilter } from "../domain";
 import { ProductDto } from "../dtos/product.dto";
@@ -7,11 +8,14 @@ import { ServiceFactory } from "@/shared/factories/service.factory";
 import { ProductRepository } from "../repositories/product.repository";
 import { AddProductInput, SlugParam, UpdateProductInput } from "../schemas";
 
-export class ProductController {
-  private readonly productService = ServiceFactory.getInstance(
-    ProductService,
-    ProductRepository,
-  );
+import type {
+  AddProductInput,
+  SlugParam,
+  UpdateProductInput,
+} from "../schemas";
+import type { ProductFilter } from "../domain";
+import type { IProductService } from "../interfaces";
+import type { ProductDto } from "../dtos/product.dto";
 
   private async assertProductExists(id: string): Promise<ProductDto> {
     return await this.productService.findOne({ id });

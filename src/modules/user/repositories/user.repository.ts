@@ -1,22 +1,18 @@
+import { PrismaClient } from "@prisma/client";
+import { inject, injectable } from "inversify";
 import { toDomainUser } from "../mappers";
 import { prismaUserFilter } from "../utils";
-import { User, UserFilter } from "../domain";
-import { IUserRepository } from "../interfaces";
-import { caseInsensitive, prisma } from "@/shared/lib";
-import { Repository } from "@shared/repositories/repository";
-import { CreateUserInput, UpdateUserInput } from "../schemas";
+import { caseInsensitive, Repository, TYPES } from "@/shared";
 
+import type { User, UserFilter } from "../domain";
+import type { CreateUserInput, UpdateUserInput } from "../schemas";
+import type { IUserRepository } from "../interfaces/user-repository.interface";
+
+@injectable()
 export class UserRepository
   extends Repository<User, CreateUserInput, UpdateUserInput, UserFilter, "User">
   implements IUserRepository
 {
-  private static _instance: UserRepository;
-
-  // Get User Repository instance Singleton
-  static getInstance(): UserRepository {
-    return (this._instance ||= new UserRepository());
-  }
-
   protected readonly modelName = "User" as const;
 
   protected toDomain = toDomainUser;
@@ -25,7 +21,7 @@ export class UserRepository
     return prismaUserFilter(f);
   }
 
-  constructor() {
+  constructor(@inject(TYPES.PrismaClient) prisma: PrismaClient) {
     super(prisma);
   }
 

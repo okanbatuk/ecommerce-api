@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import Fastify from "fastify";
 import { registerRoutes, registerCommonPlugins } from "./config";
 import decoratorPlugin from "./config/context";

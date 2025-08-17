@@ -1,13 +1,14 @@
+import { inject, injectable } from "inversify";
 import jwt, { SignOptions } from "jsonwebtoken";
-import { IJwtService } from "../interfaces";
-import { JwtConfig, JwtPayload, TokenType } from "../types/jwt";
+import { IJwtService } from "../interfaces/jwt-service.interface";
+import { TYPES } from "@/shared";
+import type { JwtConfig } from "../types/jwt/jwt-config.type";
+import type { TokenType } from "../types/jwt/jwt.types";
+import type { JwtPayload } from "../types/jwt/jwt-payload.type";
 
+@injectable()
 export class JwtService implements IJwtService {
-  private readonly cfg: JwtConfig;
-
-  constructor(cfg: JwtConfig) {
-    this.cfg = cfg;
-  }
+  constructor(@inject(TYPES.JwtConfig) private readonly cfg: JwtConfig) {}
 
   private pick(tokenType: TokenType): {
     secret: string;

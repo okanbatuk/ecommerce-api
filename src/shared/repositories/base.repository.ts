@@ -1,7 +1,8 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { Pagination } from "../types";
-import { IRepository } from "../interfaces";
 import { uncapitalize } from "../formatters";
+
+import type { Pagination } from "../types";
+import type { IRepository } from "../interfaces";
 
 export abstract class Repository<
   T,
@@ -23,15 +24,10 @@ export abstract class Repository<
   }
   protected abstract toDomain(raw: any): T;
 
+  protected softDelete = false;
+
   async findAll(pagination?: Pagination): Promise<T[]> {
-    const { limit, offset } = pagination
-      ? Object.fromEntries(
-          Object.entries(pagination).map(([key, value]) => [
-            key,
-            Number(value),
-          ]),
-        )
-      : { limit: 20, offset: 0 };
+    const { limit, offset } = pagination ?? { limit: 20, offset: 0 };
     const rows = await this.delegate.findMany({
       take: limit,
       skip: offset,
@@ -44,14 +40,7 @@ export abstract class Repository<
     filter?: F | undefined,
     pagination?: { limit: number; offset: number },
   ): Promise<T[]> {
-    const { limit, offset } = pagination
-      ? Object.fromEntries(
-          Object.entries(pagination).map(([key, value]) => [
-            key,
-            Number(value),
-          ]),
-        )
-      : { limit: 20, offset: 0 };
+    const { limit, offset } = pagination ?? { limit: 20, offset: 0 };
     const rows = await this.delegate.findMany({
       where: filter ? this.toPrismaFilter(filter) : {},
       skip: offset,
@@ -76,6 +65,11 @@ export abstract class Repository<
     return this.toDomain(row);
   }
   async delete(id: string): Promise<void> {
-    await this.delegate.delete({ where: { id } });
+    this.softDelete
+      ? await this.delegate.update({
+          where: { id },
+          data: { isDeleted: true },
+        })
+      : await this.delegate.delete({ where: { id } });
   }
 }

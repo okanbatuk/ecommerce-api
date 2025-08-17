@@ -1,5 +1,5 @@
-import { TokenResponseDto } from "../dtos";
-import { LoginInput, RegisterInput } from "../schemas";
+import type { TokenResponseDto } from "../dtos";
+import type { LoginInput, RegisterInput } from "../schemas";
 
 export interface IAuthService {
   login(data: LoginInput, deviceId: string): Promise<TokenResponseDto>;

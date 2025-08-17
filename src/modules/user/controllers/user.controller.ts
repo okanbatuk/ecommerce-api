@@ -1,30 +1,26 @@
+import { inject, injectable } from "inversify";
 import { FastifyRequest, FastifyReply } from "fastify";
-import { jwtConfig } from "@/config";
-import { UserDto } from "../dtos/user.dto";
 import { normalizeUpdateFields } from "../utils";
-import { UserFilter } from "../domain/user-filter";
-import { UserService } from "../services/user.service";
-import { ResponseCode, sendReply, RES_MSG } from "@/shared";
-import { JwtService } from "@/modules/auth/services/jwt.service";
-import { UserRepository } from "../repositories/user.repository";
-import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
-import { AuthService } from "@/modules/auth/services/auth.service";
-import { ServiceFactory } from "@/shared/factories/service.factory";
+import { TYPES, Role, BaseController } from "@/shared";
 
-export class UserController {
-  private readonly userService = ServiceFactory.getInstance(
-    UserService,
-    UserRepository,
-  );
-  private readonly authService = ServiceFactory.getInstance(
-    AuthService,
-    UserRepository,
-    new JwtService(jwtConfig),
-  );
+import type { UserFilter } from "../domain";
+import type { UserDto } from "../dtos/user.dto";
+import type { IUserService } from "../interfaces";
+import type { UpdatePasswordInput, UpdateUserInput } from "../schemas";
+import type { IAuthService } from "@/modules/auth/interfaces/auth-service.interface";
 
-  private async assertUserExists(id: string): Promise<UserDto> {
-    const user = await this.userService.findOne({ id });
-    return user;
+@injectable()
+export class UserController extends BaseController<
+  UserDto,
+  UpdateUserInput,
+  UserFilter,
+  IUserService
+> {
+  constructor(
+    @inject(TYPES.UserService) userService: IUserService,
+    @inject(TYPES.AuthService) private readonly authService: IAuthService,
+  ) {
+    super(userService);
   }
   /* GET /users/:id */
   getById = async (

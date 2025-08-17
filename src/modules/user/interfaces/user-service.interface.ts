@@ -1,7 +1,7 @@
-import { UserDto } from "../dtos/user.dto";
-import { UserFilter } from "../domain/user-filter";
-import { UpdatePasswordInput, UpdateUserInput } from "../schemas";
-import { IService } from "@/shared/interfaces/service.interface";
+import type { UserFilter } from "../domain";
+import type { UserDto } from "../dtos/user.dto";
+import type { IService } from "@/shared/interfaces/service.interface";
+import type { UpdatePasswordInput, UpdateUserInput } from "../schemas";
 
 export interface IUserService
   extends IService<UserDto, UpdateUserInput, UserFilter> {

@@ -1,26 +1,31 @@
 import { compare, hash } from "bcryptjs";
+import { inject, injectable } from "inversify";
 import {
+  ConflictError,
   RES_MSG,
   Role,
   TokenType,
+  TYPES,
   UnauthorizedError,
-  ConflictError,
 } from "@/shared";
-import { JwtPayload } from "../types/jwt";
-import { TokenResponseDto } from "../dtos";
-import { User } from "@/modules/user/domain";
 import { logger, config, redis } from "@/config";
-import { LoginInput, RegisterInput } from "../schemas";
-import { IAuthService, IJwtService } from "../interfaces";
-import { IUserRepository } from "@/modules/user/interfaces";
 import { normalizeLoginFields, normalizeRegisterFields } from "../utils";
+
+import type { JwtPayload } from "../types/jwt";
+import type { TokenResponseDto } from "../dtos";
+import type { User } from "@/modules/user/domain";
+import type { LoginInput, RegisterInput } from "../schemas";
+import type { IAuthService, IJwtService } from "../interfaces";
+import type { IUserRepository } from "@/modules/user/interfaces";
 
 const REFRESH_TTL = Number(config.jwt.refreshExpiresIn) || 604_800;
 
+@injectable()
 export class AuthService implements IAuthService {
   constructor(
+    @inject(TYPES.UserRepository)
     private readonly userRepository: IUserRepository,
-    private readonly jwtService: IJwtService,
+    @inject(TYPES.JwtService) private readonly jwtService: IJwtService,
   ) {}
 
   private assertUnique = async (
@@ -141,7 +146,9 @@ export class AuthService implements IAuthService {
       throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
     }
 
-    const user = await this.userRepository.findOne({ id: userId });
+    const user = await this.userRepository.findOne({
+      id: userId,
+    });
     if (!user) throw new UnauthorizedError(RES_MSG.INVALID("credentials"));
 
     return {

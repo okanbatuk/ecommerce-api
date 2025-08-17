@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { UserFilter } from "../domain/user-filter";
+import { UserFilter } from "../domain";
 import { caseInsensitive } from "@/shared/lib";
 
 export const prismaUserFilter = (f: UserFilter): Prisma.UserWhereInput => ({

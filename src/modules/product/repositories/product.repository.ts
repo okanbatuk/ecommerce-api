@@ -1,14 +1,18 @@
-import { PrismaClient, Prisma } from "@prisma/client";
-import { prisma } from "@/shared/lib";
-import { Product } from "../domain/product.entity";
-import { ProductFilter } from "../domain/product.filter";
-import { Repository } from "@/shared/repositories/repository";
+import { PrismaClient } from "@prisma/client";
+import { inject, injectable } from "inversify";
+import { Pagination, TYPES } from "@/shared";
+import { Repository } from "@/shared/repositories/base.repository";
 import { toDomainProduct } from "../mappers/product-entity.mapper";
 import { prismaProductFilter } from "../utils/prisma-product.filter";
 import { CreateProductInput } from "../schemas/create-product.schema";
 import { UpdateProductInput } from "../schemas/update-product.schema";
 import { IProductRepository } from "../interfaces/product-repository.interface";
 
+import type { Product, ProductFilter } from "../domain";
+import type { IProductRepository } from "../interfaces";
+import type { CreateProductInput, UpdateProductInput } from "../schemas";
+
+@injectable()
 export class ProductRepository
   extends Repository<
     Product,
@@ -26,7 +30,7 @@ export class ProductRepository
   }
   protected toDomain = toDomainProduct;
 
-  constructor() {
+  constructor(@inject(TYPES.PrismaClient) prisma: PrismaClient) {
     super(prisma);
   }
 }

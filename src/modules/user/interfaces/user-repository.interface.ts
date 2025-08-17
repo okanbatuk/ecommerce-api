@@ -1,7 +1,10 @@
-import { User } from "../domain/user.entity";
-import { CreateUserInput, UpdateUserInput } from "../schemas";
-import { IRepository } from "@shared/interfaces/repository.interface";
-import { UserFilter } from "../domain/user-filter";
+import type {
+  CreateUserInput,
+  UpdateUserInput,
+  UserSearchQueryType,
+} from "../schemas";
+import type { IRepository } from "@/shared";
+import type { User, UserFilter } from "../domain";
 
 export interface IUserRepository
   extends IRepository<User, CreateUserInput, UpdateUserInput, UserFilter> {

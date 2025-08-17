@@ -1,8 +1,9 @@
 import "@fastify/jwt";
-import { JwtPayload } from "@/modules/auth/types/jwt";
-import { RouteGenericInterface } from "fastify";
-import { UserRepository } from "@/modules/user/repositories/user.repository";
 import Redis from "ioredis";
+import { UserRepository } from "@/modules/user/repositories/user.repository";
+
+import type { RouteGenericInterface } from "fastify";
+import type { JwtPayload } from "@/modules/auth/types/jwt/jwt-payload.type";
 
 declare module "@fastify/jwt" {
   interface FastifyJWT {

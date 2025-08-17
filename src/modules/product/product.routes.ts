@@ -1,24 +1,24 @@
 import { FastifyInstance } from "fastify";
 import {
-  AddProductInput,
+  type AddProductInput,
+  type UpdateProductInput,
   addProductJsonSchema,
   searchQueryJsonSchema,
   slugParamJsonSchema,
-  UpdateProductInput,
   updateProductJsonSchema,
 } from "./schemas";
+import { container, TYPES } from "@/shared";
 import {
-  idParamType,
+  type idParamType,
   idParamJsonSchema,
 } from "@/shared/validations/id-param.schema";
 import { ProductController } from "./controllers/product.controller";
 
 const productRoutes = (fastify: FastifyInstance) => {
-  const ctrl = new ProductController();
-
-  fastify.addHook("preHandler", fastify.authenticate);
+  const ctrl = container.get<ProductController>(TYPES.ProductController);
 
   fastify
+    .addHook("preHandler", fastify.authenticate)
     .get("/", { schema: { querystring: searchQueryJsonSchema } }, ctrl.search)
     .get("/id/:id", { schema: { params: idParamJsonSchema } }, ctrl.getById)
     .get(

@@ -1,5 +1,9 @@
+import type { Pagination } from "../types";
+
 export interface IService<T, U = Partial<T>, F = Partial<T>> {
-  findAll({ limit, offset }: { limit: number; offset: number }): Promise<T[]>;
+  findAll(p: Pagination): Promise<T[]>;
+
+  findMany(filter: F, p: Pagination): Promise<T[]>;
 
   findOne(filter: F): Promise<T>;
 

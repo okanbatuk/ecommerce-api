@@ -1,5 +1,5 @@
 import { config } from "./env.config";
-import { JwtConfig } from "@modules/auth/types/jwt/jwt-config.type";
+import type { JwtConfig } from "@modules/auth/types/jwt/jwt-config.type";
 
 export const jwtConfig: JwtConfig = {
   accessSecret: config.jwt.accessSecret,

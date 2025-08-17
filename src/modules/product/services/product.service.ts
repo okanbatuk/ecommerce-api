@@ -1,21 +1,23 @@
+import { inject, injectable } from "inversify";
 import {
   generateSlug,
   normalizeAddFields,
   normalizeUpdateFields,
 } from "../utils";
-import {
+import { ProductMapper } from "../mappers";
+import { BaseService } from "@/shared/services/base.service";
+import { ConflictError, NotFoundError, RES_MSG, TYPES } from "@/shared";
+
+import type {
   AddProductInput,
   CreateProductInput,
-  SlugParam,
   UpdateProductInput,
 } from "../schemas";
-import { ProductMapper } from "../mappers";
-import { ProductDto } from "../dtos/product.dto";
-import { Product, ProductFilter } from "../domain";
-import { BaseService } from "@/shared/services/base.service";
-import { ConflictError, NotFoundError, RES_MSG } from "@/shared";
-import { IProductRepository, IProductService } from "../interfaces";
+import type { ProductDto } from "../dtos/product.dto";
+import type { Product, ProductFilter } from "../domain";
+import type { IProductRepository, IProductService } from "../interfaces";
 
+@injectable()
 export class ProductService
   extends BaseService<
     ProductDto,
@@ -26,7 +28,10 @@ export class ProductService
   >
   implements IProductService
 {
-  constructor(private readonly productRepository: IProductRepository) {
+  constructor(
+    @inject(TYPES.ProductRepository)
+    private readonly productRepository: IProductRepository,
+  ) {
     super(productRepository);
   }
 
@@ -42,9 +47,12 @@ export class ProductService
 
   async create(rawData: AddProductInput): Promise<ProductDto> {
     const refinedData: AddProductInput = normalizeAddFields(rawData);
-    const slug = generateSlug(refinedData.name);
-    const existProduct = await this.productRepository.findOne({ slug });
-    if (existProduct) throw new ConflictError(RES_MSG.DUPLICATE("Slug"));
+
+    let slug: string = "";
+    do {
+      slug = generateSlug(refinedData.name);
+    } while (await this.productRepository.findOne({ slug }));
+
     const addedProduct = await this.productRepository.create({
       ...refinedData,
       slug,

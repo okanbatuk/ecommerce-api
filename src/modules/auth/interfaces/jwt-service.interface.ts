@@ -1,4 +1,4 @@
-import { JwtPayload, TokenType } from "../types/jwt";
+import type { JwtPayload, TokenType } from "../types/jwt";
 
 export interface IJwtService {
   sign(payload: JwtPayload, tokenType?: TokenType): string;

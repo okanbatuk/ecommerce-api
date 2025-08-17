@@ -1,20 +1,23 @@
 import { randomUUID } from "crypto";
+import { inject, injectable } from "inversify";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { config, jwtConfig, logger } from "@/config";
-import { JwtService } from "../services/jwt.service";
-import { AuthService } from "../services/auth.service";
-import { LoginInput, RegisterInput } from "../schemas";
-import { ServiceFactory } from "@shared/factories/service.factory";
-import { normalizeLoginFields, normalizeRegisterFields } from "../utils";
-import { UserRepository } from "@modules/user/repositories/user.repository";
-import { RES_MSG, sendReply, ResponseCode, UnauthorizedError } from "@/shared";
+import {
+  RES_MSG,
+  sendReply,
+  ResponseCode,
+  UnauthorizedError,
+  TYPES,
+} from "@/shared";
+import { config, logger } from "@/config";
 
+import type { LoginInput, RegisterInput } from "../schemas";
+import type { IAuthService } from "../interfaces/auth-service.interface";
+
+@injectable()
 export class AuthController {
-  private readonly authService = ServiceFactory.getInstance(
-    AuthService,
-    UserRepository,
-    new JwtService(jwtConfig),
-  );
+  constructor(
+    @inject(TYPES.AuthService) private readonly authService: IAuthService,
+  ) {}
 
   private setDidCookie = (reply: FastifyReply, deviceId: string): void => {
     reply.setCookie("did", deviceId, {
@@ -40,12 +43,12 @@ export class AuthController {
   };
 
   private extractToken = (req: FastifyRequest): string => {
-    const token = req.cookies.refreshToken;
-    if (!token) {
+    const { value, valid } = req.unsignCookie("refreshToken");
+    if (!valid) {
       logger.warn(`[AuthController.refresh] Token not found in cookies`);
       throw new UnauthorizedError(RES_MSG.NOT_FOUND("Refresh token"));
     }
-    return token;
+    return value;
   };
 
   /* POST /auth/register */
