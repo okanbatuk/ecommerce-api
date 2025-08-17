@@ -6,6 +6,7 @@ export type ProductDto = {
   price: number;
   stock: number;
   isActive: boolean;
+  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
 };

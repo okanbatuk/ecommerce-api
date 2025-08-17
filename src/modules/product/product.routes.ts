@@ -45,6 +45,16 @@ const productRoutes = (fastify: FastifyInstance) => {
       },
       ctrl.update,
     )
+    .patch<{ Params: idParamType }>(
+      "/:id/restore",
+      {
+        preHandler: fastify.assertAdmin,
+        schema: {
+          params: idParamJsonSchema,
+        },
+      },
+      ctrl.restore,
+    )
     .delete<{ Params: { id: string } }>(
       "/:id",
       {

@@ -11,6 +11,7 @@ export class ProductMapper {
       price: product.price,
       stock: product.stock,
       isActive: product.isActive,
+      isDeleted: product.isDeleted,
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
     };

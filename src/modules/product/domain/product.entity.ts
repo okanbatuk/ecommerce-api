@@ -7,6 +7,7 @@ export interface Product {
   stock: number;
   images: string[];
   isActive: boolean;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

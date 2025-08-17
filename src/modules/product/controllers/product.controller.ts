@@ -1,12 +1,7 @@
 import { inject, injectable } from "inversify";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { ProductSearchFilter } from "../domain";
-import { ProductDto } from "../dtos/product.dto";
-import { RES_MSG, ResponseCode, sendReply } from "@/shared";
-import { ProductService } from "../services/product.service";
-import { ServiceFactory } from "@/shared/factories/service.factory";
-import { ProductRepository } from "../repositories/product.repository";
-import { AddProductInput, SlugParam, UpdateProductInput } from "../schemas";
+import { normalizeUpdateFields } from "../utils";
+import { BaseController, Role, TYPES } from "@/shared";
 
 import type {
   AddProductInput,
@@ -17,77 +12,27 @@ import type { ProductFilter } from "../domain";
 import type { IProductService } from "../interfaces";
 import type { ProductDto } from "../dtos/product.dto";
 
-  private async assertProductExists(id: string): Promise<ProductDto> {
-    return await this.productService.findOne({ id });
+@injectable()
+export class ProductController extends BaseController<
+  ProductDto,
+  UpdateProductInput,
+  ProductFilter,
+  IProductService
+> {
+  constructor(
+    @inject(TYPES.ProductService)
+    productService: IProductService,
+  ) {
+    super(productService);
   }
-
-  /* GET /products/:id */
-  getById = async (
-    req: FastifyRequest<{ Params: { id: string } }>,
-    reply: FastifyReply,
-  ): Promise<void> => {
-    const product = await this.assertProductExists(req.params.id);
-
-    return sendReply(
-      reply,
-      200,
-      ResponseCode.OK,
-      product,
-      RES_MSG.FOUND("Product"),
-    );
-  };
 
   /* GET /products/:slug */
   getBySlug = async (
     req: FastifyRequest<{ Params: SlugParam }>,
     res: FastifyReply,
   ): Promise<void> => {
-    const product = await this.productService.getBySlug(req.params.slug);
-    return sendReply(
-      res,
-      200,
-      ResponseCode.OK,
-      product,
-      RES_MSG.FOUND("Product"),
-    );
-  };
-
-  /* GET /products?name=phone&minPrice=100&maxPrice=500&inStock=true&limit=10&offset=0 */
-  search = async (
-    req: FastifyRequest<{ Querystring: ProductSearchFilter }>,
-    res: FastifyReply,
-  ) => {
-    const {
-      name,
-      minPrice,
-      maxPrice,
-      inStock,
-      isActive = true,
-      limit = 20,
-      offset = 0,
-    } = req.query;
-
-    const where: ProductSearchFilter = Object.fromEntries(
-      Object.entries({
-        name: name?.trim().toLowerCase(),
-        minPrice,
-        maxPrice,
-        inStock,
-        isActive,
-      }).filter(([_, value]) => value !== undefined && value !== null),
-    );
-
-    const result = Object.keys(where).length
-      ? await this.productService.findMany(where, { limit, offset })
-      : await this.productService.findAll({ limit, offset });
-
-    return sendReply(
-      res,
-      200,
-      ResponseCode.OK,
-      result,
-      RES_MSG.ALL("Products"),
-    );
+    const product = await this.service.getBySlug(req.params.slug);
+    return this.ok(res, product, "Product");
   };
 
   /* POST /products */
@@ -95,15 +40,9 @@ import type { ProductDto } from "../dtos/product.dto";
     req: FastifyRequest<{ Body: AddProductInput }>,
     res: FastifyReply,
   ): Promise<void> => {
-    const addedProduct = await this.productService.create(req.body);
+    const addedProduct = await this.service.create(req.body);
 
-    return sendReply(
-      res,
-      201,
-      ResponseCode.CREATED,
-      addedProduct,
-      RES_MSG.CREATED("Product"),
-    );
+    return this.created(res, addedProduct, "Product");
   };
 
   /* PATCH /products/:id */
@@ -111,19 +50,18 @@ import type { ProductDto } from "../dtos/product.dto";
     req: FastifyRequest<{ Params: { id: string }; Body: UpdateProductInput }>,
     res: FastifyReply,
   ): Promise<void> => {
-    await this.assertProductExists(req.params.id);
+    return this.updateCore(req, res, normalizeUpdateFields);
+  };
 
-    const updatedProduct = await this.productService.update(
-      req.params.id,
-      req.body,
-    );
-    return sendReply(
-      res,
-      200,
-      ResponseCode.CREATED,
-      updatedProduct,
-      RES_MSG.UPDATED("Product"),
-    );
+  /* PATCH /product/:id/restore */
+  restore = async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    res: FastifyReply,
+  ): Promise<void> => {
+    await this.assertExists(req.params.id, req.user.role === Role.ADMIN);
+
+    await this.service.restore(req.params.id);
+    return this.updated(res, "Product");
   };
 
   /* DELETE /product/:id */
@@ -131,15 +69,7 @@ import type { ProductDto } from "../dtos/product.dto";
     req: FastifyRequest<{ Params: { id: string } }>,
     res: FastifyReply,
   ): Promise<void> => {
-    await this.assertProductExists(req.params.id);
-
-    await this.productService.delete(req.params.id);
-    return sendReply(
-      res,
-      200,
-      ResponseCode.OK,
-      null,
-      RES_MSG.DELETED("Product"),
-    );
+    await this.removeCore(req, res);
+    return this.noContent(res, "Product");
   };
 }

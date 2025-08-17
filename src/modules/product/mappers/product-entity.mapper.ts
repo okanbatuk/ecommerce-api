@@ -10,6 +10,7 @@ export const toDomainProduct = (p: PrismaProduct): Product => ({
   stock: p.stock,
   images: p.images ?? [],
   isActive: p.isActive,
+  isDeleted: p.isDeleted,
   createdAt: p.createdAt,
   updatedAt: p.updatedAt,
 });

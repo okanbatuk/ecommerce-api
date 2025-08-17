@@ -23,7 +23,7 @@ export async function registerCommonPlugins(app: FastifyInstance) {
     secret: config.jwt.accessSecret,
     cookie: {
       cookieName: "refreshToken",
-      signed: false,
+      signed: true,
     },
   });
   await app.register(auth);

@@ -24,7 +24,8 @@ export class ProductService
     Product,
     CreateProductInput,
     UpdateProductInput,
-    ProductFilter
+    ProductFilter,
+    IProductRepository
   >
   implements IProductService
 {
@@ -79,5 +80,10 @@ export class ProductService
 
     const updatedProduct = await this.productRepository.update(id, refinedData);
     return this.toDto(updatedProduct);
+  }
+
+  async restore(id: string): Promise<ProductDto> {
+    const restored = await this.productRepository.restore(id);
+    return this.toDto(restored);
   }
 }

@@ -8,4 +8,5 @@ export interface IProductService
     ICreatable<ProductDto, AddProductInput> {
   getBySlug(slug: string): Promise<ProductDto>;
   update(id: string, rawData: UpdateProductInput): Promise<ProductDto>;
+  restore(id: string): Promise<ProductDto>;
 }

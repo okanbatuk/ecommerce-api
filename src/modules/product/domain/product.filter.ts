@@ -6,4 +6,5 @@ export type ProductFilter = {
   maxPrice?: number;
   inStock?: boolean;
   isActive?: boolean;
+  isDeleted?: boolean;
 };

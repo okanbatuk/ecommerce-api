@@ -10,4 +10,6 @@ export interface IProductRepository
     CreateProductInput,
     UpdateProductInput,
     ProductFilter
-  > {}
+  > {
+  restore(id: string): Promise<Product>;
+}

@@ -1,18 +1,20 @@
-import { Pagination } from "../types";
 import { RES_MSG } from "../constants";
 import { NotFoundError } from "../exceptions";
-import { IService } from "@shared/interfaces/service.interface";
-import { IRepository } from "@shared/interfaces/repository.interface";
+
+import type { Pagination } from "../types";
+import type { IService } from "@shared/interfaces/service.interface";
+import type { IRepository } from "@shared/interfaces/repository.interface";
 
 export abstract class BaseService<
   T, // DTO
   E, // Entity
-  C = Partial<T>,
+  C = Partial<T>, // Create Dto
   U = Partial<T>, // Update DTO
   F = Partial<T>, // Filter
+  R extends IRepository<E, C, U, F> = IRepository<E, C, U, F>,
 > implements IService<T, U, F>
 {
-  constructor(protected readonly repository: IRepository<E, C, U, F>) {}
+  constructor(protected readonly repository: R) {}
 
   protected abstract toDto(entity: E): T;
 
