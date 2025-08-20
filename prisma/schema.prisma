@@ -33,8 +33,7 @@ model Product {
   price       Decimal  @db.Decimal(10,2)
   stock       Int      @default(0)
   images      String[]  @default([])
-  isActive    Boolean  @default(true)
-  isDeleted Boolean @default(false)
+  isDeleted   Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
