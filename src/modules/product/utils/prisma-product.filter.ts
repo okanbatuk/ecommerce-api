@@ -11,5 +11,4 @@ export const prismaProductFilter = (
   ...(f.inStock !== undefined && {
     stock: f.inStock ? { gt: 0 } : { equals: 0 },
   }),
-  ...(f.isActive !== undefined && { isActive: f.isActive }),
 });
