@@ -12,21 +12,30 @@ import { JwtService } from "@/modules/auth/services/jwt.service";
 // import Repositories && Repo Interfaces
 import { UserRepository } from "@/modules/user/repositories/user.repository";
 import { ProductRepository } from "@/modules/product/repositories/product.repository";
-import type { IUserRepository } from "@/modules/user/interfaces/user-repository.interface";
-import type { IProductRepository } from "@/modules/product/interfaces/product-repository.interface";
+import { CategoryRepository } from "@/modules/category/repositories/category.repository";
+
+import type { IUserRepository, IUserService } from "@/modules/user/interfaces";
+import type {
+  IProductRepository,
+  IProductService,
+} from "@/modules/product/interfaces";
+import type {
+  ICategoryRepository,
+  ICategoryService,
+} from "@/modules/category/interfaces";
 
 // import Services && Service Interfaces
 import { AuthService } from "@/modules/auth/services/auth.service";
 import { UserService } from "@/modules/user/services/user.service";
+import { CategoryService } from "@/modules/category/services/category.service";
 import { ProductService } from "@/modules/product/services/product.service";
-import type { IProductService } from "@/modules/product/interfaces/product-service.interface";
 import type { IAuthService } from "@/modules/auth/interfaces/auth-service.interface";
-import type { IUserService } from "@/modules/user/interfaces/user-service.interface";
 
 // import Controllers
 import { AuthController } from "@/modules/auth/controllers/auth.controller";
 import { UserController } from "@/modules/user/controllers/user.controller";
 import { ProductController } from "@/modules/product/controllers/product.controller";
+import { CategoryController } from "@/modules/category/controllers/category.controller";
 
 export const container = new Container();
 
@@ -55,6 +64,10 @@ container
   .bind<IProductRepository>(TYPES.ProductRepository)
   .to(ProductRepository)
   .inSingletonScope();
+container
+  .bind<ICategoryRepository>(TYPES.CategoryRepository)
+  .to(CategoryRepository)
+  .inSingletonScope();
 
 // Bind Services
 container
@@ -69,6 +82,10 @@ container
   .bind<IProductService>(TYPES.ProductService)
   .to(ProductService)
   .inSingletonScope();
+container
+  .bind<ICategoryService>(TYPES.CategoryService)
+  .to(CategoryService)
+  .inSingletonScope();
 
 // Bind Controllers
 container
@@ -82,4 +99,8 @@ container
 container
   .bind<ProductController>(TYPES.ProductController)
   .to(ProductController)
+  .inSingletonScope();
+container
+  .bind<CategoryController>(TYPES.CategoryController)
+  .to(CategoryController)
   .inSingletonScope();

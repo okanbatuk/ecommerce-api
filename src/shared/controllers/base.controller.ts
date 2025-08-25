@@ -16,7 +16,10 @@ export abstract class BaseController<
 > {
   constructor(protected readonly service: any) {}
 
-  protected async assertExists(id: string, isAdmin: boolean): Promise<T> {
+  protected async assertExists(
+    id: string | number,
+    isAdmin: boolean,
+  ): Promise<T> {
     return this.service.findOne({ id } as F);
   }
 
@@ -118,7 +121,7 @@ export abstract class BaseController<
   };
 
   removeCore = async (
-    req: FastifyRequest<{ Params: { id: string } }>,
+    req: FastifyRequest<{ Params: { id: string | number } }>,
     reply: FastifyReply,
   ): Promise<void> => {
     await this.assertExists(req.params.id, req.user.role === Role.ADMIN);
