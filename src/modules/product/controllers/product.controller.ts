@@ -1,13 +1,9 @@
 import { inject, injectable } from "inversify";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { normalizeUpdateFields } from "../utils";
-import { BaseController, Role, TYPES } from "@/shared";
+import { BaseController, Role, type SlugParam, TYPES } from "@/shared";
 
-import type {
-  AddProductInput,
-  SlugParam,
-  UpdateProductInput,
-} from "../schemas";
+import type { AddProductInput, UpdateProductInput } from "../schemas";
 import type { ProductFilter } from "../domain";
 import type { IProductService } from "../interfaces";
 import type { ProductDto } from "../dtos/product.dto";

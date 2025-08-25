@@ -4,14 +4,13 @@ import {
   type UpdateProductInput,
   addProductJsonSchema,
   searchQueryJsonSchema,
-  slugParamJsonSchema,
   updateProductJsonSchema,
 } from "./schemas";
-import { container, TYPES } from "@/shared";
+import { container, slugParamJsonSchema, TYPES } from "@/shared";
 import {
   type idParamType,
   idParamJsonSchema,
-} from "@/shared/validations/id-param.schema";
+} from "@/shared/schemas/id-param.schema";
 import { ProductController } from "./controllers/product.controller";
 
 const productRoutes = (fastify: FastifyInstance) => {

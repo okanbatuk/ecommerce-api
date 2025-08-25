@@ -27,6 +27,7 @@ node_modules/
 # Prisma
 prisma/migrations/dev.db
 prisma/migrations/*.sql
+prisma/generated/client
 
 # Environment files
 .env
