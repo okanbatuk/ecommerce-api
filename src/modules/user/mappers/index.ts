@@ -1,2 +1,1 @@
-export * from "./user-entity.mapper";
-export * from "./user-dto.mapper";
+export * from "./user.mapper";

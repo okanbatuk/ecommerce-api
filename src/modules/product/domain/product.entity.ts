@@ -6,6 +6,7 @@ export interface Product {
   price: number;
   stock: number;
   images: string[];
+  categoryId: number;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;

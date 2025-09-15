@@ -1,8 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { inject, injectable } from "inversify";
-import { Pagination, TYPES } from "@/shared";
+import { TYPES } from "@/shared";
+import { ProductMapper } from "../mappers/product.mapper";
 import { Repository } from "@/shared/repositories/base.repository";
-import { toDomainProduct } from "../mappers/product-entity.mapper";
 import { prismaProductFilter } from "../utils/prisma-product.filter";
 
 import type { Product, ProductFilter } from "../domain";
@@ -27,7 +27,7 @@ export class ProductRepository
   }
   protected readonly softDelete: boolean;
 
-  protected toDomain = toDomainProduct;
+  protected toDomain = ProductMapper.toDomainProduct;
 
   constructor(@inject(TYPES.PrismaClient) prisma: PrismaClient) {
     super(prisma);

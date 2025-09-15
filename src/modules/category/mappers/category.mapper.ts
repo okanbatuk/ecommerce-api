@@ -1,25 +1,38 @@
 import { Category as PrismaCategory } from "@prisma/client";
-import { CategoryDto } from "../dtos/category.dto";
-import { Category } from "../entities";
+import { Prisma } from "@prisma/client";
+import { ProductMapper } from "@/modules/product/mappers";
 
-export class CategoryMapper {
-  static toDto(category: Category): CategoryDto {
-    return {
-      id: category.id,
-      name: category.name,
-      slug: category.slug,
-      parentId: category.parentId,
-      createdAt: category.createdAt.toISOString(),
-      updatedAt: category.updatedAt.toISOString(),
-    };
-  }
+import type { IMapper } from "@/shared";
+import type { Category } from "../entities";
+import type { CategoryDto } from "../dtos/category.dto";
 
-  static toDomainEntity = (p: PrismaCategory): Category => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    parentId: p.parentId,
-    createdAt: p.createdAt,
-    updatedAt: p.updatedAt,
-  });
-}
+type RawCategory =
+  | PrismaCategory
+  | Prisma.CategoryGetPayload<{ include: { products: true } }>;
+
+export const CategoryMapper: IMapper<PrismaCategory, CategoryDto, Category> =
+  class {
+    static toDto(category: Category): CategoryDto {
+      return {
+        id: category.id,
+        name: category.name,
+        slug: category.slug,
+        parentId: category.parentId,
+        createdAt: category.createdAt.toISOString(),
+        updatedAt: category.updatedAt.toISOString(),
+      };
+    }
+
+    static toDomainEntity = (raw: RawCategory): Category => ({
+      id: raw.id,
+      name: raw.name,
+      slug: raw.slug,
+      parentId: raw.parentId,
+      products:
+        "products" in raw
+          ? ProductMapper.toDomainEntities(raw.products)
+          : undefined,
+      createdAt: raw.createdAt,
+      updatedAt: raw.updatedAt,
+    });
+  };

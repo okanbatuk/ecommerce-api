@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { inject, injectable } from "inversify";
-import { toDomainUser } from "../mappers";
+import { UserMapper } from "../mappers";
 import { prismaUserFilter } from "../utils";
 import { caseInsensitive, Repository, TYPES } from "@/shared";
 
@@ -15,7 +15,7 @@ export class UserRepository
 {
   protected readonly modelName = "User" as const;
 
-  protected toDomain = toDomainUser;
+  protected toDomain = UserMapper.toDomainEntity;
 
   protected toPrismaFilter(f: UserFilter): Record<string, any> {
     return prismaUserFilter(f);
