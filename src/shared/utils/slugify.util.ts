@@ -1,8 +1,8 @@
 export const slugify = (text: string): string => {
   return text
     .toLowerCase()
-    .normalize("NFD") // Unicode normalization
-    .replace(/[\u0300-\u036f]/g, "") // remove accent
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/ç/g, "c")
     .replace(/ğ/g, "g")
     .replace(/ı/g, "i")
@@ -12,5 +12,6 @@ export const slugify = (text: string): string => {
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 };

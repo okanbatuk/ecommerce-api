@@ -5,7 +5,8 @@ export interface Category {
   name: string;
   slug: string;
   parentId: number | null;
-  products: Product[] | undefined;
+  products?: Product[];
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
