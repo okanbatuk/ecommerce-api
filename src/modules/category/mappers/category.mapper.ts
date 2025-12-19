@@ -14,6 +14,7 @@ export class CategoryMapper {
       name: category.name,
       slug: category.slug,
       parentId: category.parentId,
+      isDeleted: category.isDeleted,
       products: category.products
         ? category.products.map((p) => ProductMapper.toDto(p))
         : undefined,

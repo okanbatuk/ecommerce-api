@@ -1,5 +1,6 @@
 import type { Pagination } from "../types";
 
+/** @deprecated Cant use this interface. */
 export interface IService<T, U = Partial<T>, F = Partial<T>> {
   findAll(p: Pagination): Promise<T[]>;
 
