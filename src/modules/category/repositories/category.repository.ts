@@ -1,13 +1,15 @@
+import { TYPES } from "@/shared";
 import { PrismaClient } from "@prisma/client";
-import { injectable, inject } from "inversify";
-import { BaseRepository, TYPES } from "@/shared";
-import { CategoryMapper } from "../mappers/category.mapper";
+import { inject, injectable } from "inversify";
 import { prismaCategoryFilter } from "../filters/prisma-category.filter";
+import { CategoryMapper } from "../mappers/category.mapper";
+import { BaseRepository } from "@/shared/repositories/base.repository";
 
 import type { Category } from "../entities";
 import type { CategoryFilter } from "../filters";
-import type { ICategoryRepository } from "../interfaces";
-import type { CreateCategoryData, UpdateCategoryData } from "../schemas";
+import type { ICategoryRepository } from "../interfaces/category-repository.interface";
+import type { CreateCategoryData } from "../schemas/create-data.schema";
+import type { UpdateCategoryData } from "../schemas/update-data.schema";
 
 @injectable()
 export class CategoryRepository
@@ -59,14 +61,9 @@ export class CategoryRepository
     return rows.map(this.toDomain);
   }
 
-  async findMany(
-    filter: CategoryFilter = {},
-    pagination?: { limit: number; offset: number },
-  ): Promise<Category[]> {
+  async findMany(filter: CategoryFilter = {}): Promise<Category[]> {
     const rows = await this.category.findMany({
       where: prismaCategoryFilter(filter),
-      skip: pagination?.offset,
-      take: pagination?.limit,
       orderBy: { createdAt: "desc" },
     });
 

@@ -5,6 +5,7 @@ import zodToJsonSchema from "zod-to-json-schema";
 export const addCategorySchema = z.object({
   name: z
     .string()
+    .trim()
     .min(3, VAL_MSG.MIN("Product name"))
     .max(50, VAL_MSG.MAX("Product name", 50)),
   parentId: z.number().positive().finite().optional(),

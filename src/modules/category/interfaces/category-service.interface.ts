@@ -1,6 +1,7 @@
 import type { CategoryFilter } from "../filters";
 import type { CategoryDto } from "../dtos/category.dto";
-import type { AddCategoryInput, UpdateCategoryInput } from "../schemas";
+import type { AddCategoryInput } from "../schemas/add-input.schema";
+import type { UpdateCategoryInput } from "../schemas/update-input.schema";
 
 export interface ICategoryService {
   findById(id: number): Promise<CategoryDto>;

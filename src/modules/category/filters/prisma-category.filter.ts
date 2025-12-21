@@ -9,6 +9,23 @@ export const prismaCategoryFilter = (
   if (f.id !== undefined) where.id = f.id;
   if (f.name) where.name = f.name;
   if (f.slug) where.slug = f.slug;
+  if (f.search) {
+    where.OR = [
+      {
+        name: {
+          contains: f.search,
+          mode: "insensitive",
+        },
+      },
+      {
+        slug: {
+          contains: f.search,
+          mode: "insensitive",
+        },
+      },
+    ];
+  }
+
   if (f.parentId !== undefined) where.parentId = f.parentId;
   if (f.isDeleted !== undefined) where.isDeleted = f.isDeleted;
 

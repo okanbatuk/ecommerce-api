@@ -4,4 +4,6 @@ export interface CategoryFilter {
   slug?: string;
   parentId?: number | null;
   isDeleted?: boolean;
+
+  search?: string;
 }

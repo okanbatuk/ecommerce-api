@@ -1,5 +1,5 @@
 import { Prisma, Category as PrismaCategory } from "@prisma/client";
-import { ProductMapper } from "@/modules/product/mappers";
+import { ProductMapper } from "@/modules/product/mappers/product.mapper";
 import type { Category } from "../entities";
 import type { CategoryDto } from "../dtos/category.dto";
 

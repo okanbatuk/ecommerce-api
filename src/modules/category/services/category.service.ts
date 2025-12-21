@@ -1,20 +1,24 @@
-import { inject, injectable } from "inversify";
-import { ConflictError, NotFoundError, RES_MSG, TYPES } from "@/shared";
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  RES_MSG,
+  TYPES,
+} from "@/shared";
 import { BaseService } from "@/shared/services/base.service";
-import { CategoryMapper } from "../mappers";
+import { inject, injectable } from "inversify";
+import { CategoryMapper } from "../mappers/category.mapper";
 import { buildCategorySlug, normalizeUpdateFields } from "../utils";
 import { normalizeAddFields } from "../utils/add-fields.normalize";
 
 import type { CategoryDto } from "../dtos/category.dto";
 import type { Category } from "../entities";
 import type { CategoryFilter } from "../filters";
-import type { ICategoryRepository } from "../interfaces";
+import type { ICategoryRepository } from "../interfaces/category-repository.interface";
 import type { ICategoryService } from "../interfaces/category-service.interface";
-import type {
-  AddCategoryInput,
-  UpdateCategoryData,
-  UpdateCategoryInput,
-} from "../schemas";
+import type { AddCategoryInput } from "../schemas/add-input.schema";
+import type { UpdateCategoryData } from "../schemas/update-data.schema";
+import type { UpdateCategoryInput } from "../schemas/update-input.schema";
 
 @injectable()
 export class CategoryService
@@ -34,6 +38,12 @@ export class CategoryService
     filter: CategoryFilter = {},
     options?: { includeDeleted?: boolean },
   ): Promise<CategoryDto[]> {
+    if (filter.search && (filter.name || filter.slug)) {
+      throw new BadRequestError(
+        "search cannot be used together with name or slug filters",
+      );
+    }
+
     const refinedFilter: CategoryFilter = {
       ...filter,
       ...(options?.includeDeleted ? {} : { isDeleted: false }),

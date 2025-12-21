@@ -1,6 +1,7 @@
 import type { Category } from "../entities";
 import type { CategoryFilter } from "../filters";
-import type { CreateCategoryData, UpdateCategoryData } from "../schemas";
+import type { CreateCategoryData } from "../schemas/create-data.schema";
+import type { UpdateCategoryData } from "../schemas/update-data.schema";
 
 export interface ICategoryRepository {
   create(data: CreateCategoryData): Promise<Category>;
