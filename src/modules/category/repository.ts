@@ -1,15 +1,16 @@
 import { TYPES } from "@/shared";
-import { PrismaClient } from "@prisma/client";
-import { inject, injectable } from "inversify";
-import { prismaCategoryFilter } from "../filters/prisma-category.filter";
-import { CategoryMapper } from "../mappers/category.mapper";
 import { BaseRepository } from "@/shared/repositories/base.repository";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { inject, injectable } from "inversify";
+import { prismaCategoryFilter } from "./filters/prisma.filter";
+import { CategoryMapper } from "./mapper";
 
-import type { Category } from "../entities";
-import type { CategoryFilter } from "../filters";
-import type { ICategoryRepository } from "../interfaces/category-repository.interface";
-import type { CreateCategoryData } from "../schemas/create-data.schema";
-import type { UpdateCategoryData } from "../schemas/update-data.schema";
+import type { FindManyOptions, FindOptions } from "@/shared";
+import type { Category } from "./entity";
+import type { CategoryFilter } from "./filters";
+import type { ICategoryRepository } from "./interfaces/repository";
+import type { CreateCategoryData } from "./schemas/create-data";
+import type { UpdateCategoryData } from "./schemas/update-data";
 
 @injectable()
 export class CategoryRepository
@@ -23,9 +24,21 @@ export class CategoryRepository
     super(prisma);
   }
 
-  async findById(id: number): Promise<Category | null> {
-    const row = await this.category.findUnique({
-      where: { id },
+  private applyVisibility(
+    where: Prisma.CategoryWhereInput,
+    options?: FindOptions,
+  ) {
+    if (options?.includeDeleted) return where;
+
+    return {
+      ...where,
+      isDeleted: false,
+    };
+  }
+
+  async findById(id: number, options?: FindOptions): Promise<Category | null> {
+    const row = await this.category.findFirst({
+      where: this.applyVisibility({ id }, options),
       include: { products: true },
     });
     if (!row) return null;
@@ -33,9 +46,12 @@ export class CategoryRepository
     return this.toDomain(row);
   }
 
-  async findBySlug(slug: string): Promise<Category | null> {
-    const row = await this.category.findUnique({
-      where: { slug },
+  async findBySlug(
+    slug: string,
+    options?: FindOptions,
+  ): Promise<Category | null> {
+    const row = await this.category.findFirst({
+      where: this.applyVisibility({ slug }, options),
       include: { products: true },
     });
     if (!row) return null;
@@ -43,27 +59,36 @@ export class CategoryRepository
     return this.toDomain(row);
   }
 
-  async findRoots(): Promise<Category[]> {
+  async findRoots(options?: FindOptions): Promise<Category[]> {
     const rows = await this.category.findMany({
-      where: { parentId: null },
+      where: this.applyVisibility({ parentId: null }, options),
       orderBy: { name: "asc" },
     });
 
     return rows.map(this.toDomain);
   }
 
-  async findChildren(parentId: number): Promise<Category[]> {
+  async findChildren(
+    parentId: number,
+    options?: FindOptions,
+  ): Promise<Category[]> {
     const rows = await this.category.findMany({
-      where: { parentId },
+      where: this.applyVisibility({ parentId }, options),
       orderBy: { name: "asc" },
     });
 
     return rows.map(this.toDomain);
   }
 
-  async findMany(filter: CategoryFilter = {}): Promise<Category[]> {
+  async findMany(
+    filter: CategoryFilter = {},
+    options?: FindManyOptions,
+  ): Promise<Category[]> {
     const rows = await this.category.findMany({
-      where: prismaCategoryFilter(filter),
+      where: this.applyVisibility(
+        prismaCategoryFilter(filter, options?.search),
+        options,
+      ),
       orderBy: { createdAt: "desc" },
     });
 

@@ -1,25 +1,26 @@
 import { Prisma } from "@prisma/client";
-import type { CategoryFilter } from "./category.filter";
+import type { CategoryFilter } from "./filter";
 
 export const prismaCategoryFilter = (
   f: CategoryFilter,
+  search?: string,
 ): Prisma.CategoryWhereInput => {
   const where: Prisma.CategoryWhereInput = {};
 
   if (f.id !== undefined) where.id = f.id;
   if (f.name) where.name = f.name;
   if (f.slug) where.slug = f.slug;
-  if (f.search) {
+  if (search) {
     where.OR = [
       {
         name: {
-          contains: f.search,
+          contains: search,
           mode: "insensitive",
         },
       },
       {
         slug: {
-          contains: f.search,
+          contains: search,
           mode: "insensitive",
         },
       },

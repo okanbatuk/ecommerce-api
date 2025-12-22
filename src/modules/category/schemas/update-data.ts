@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { updateCategorySchema } from "./update-input.schema";
+import { updateCategorySchema } from "./update-input";
 
 export const updateCategoryDataSchema = updateCategorySchema.extend({
   slug: z

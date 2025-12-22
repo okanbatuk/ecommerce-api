@@ -1,9 +1,12 @@
-export interface CategoryFilter {
+export interface CategoryQuery {
   id?: number;
   name?: string;
   slug?: string;
   parentId?: number | null;
-  isDeleted?: boolean;
 
   search?: string;
+
+  options?: {
+    includeDeleted?: boolean;
+  };
 }

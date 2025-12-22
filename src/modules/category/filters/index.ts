@@ -1,2 +1,2 @@
-export * from "./category.filter";
-export * from "./category-search.filter";
+export * from "./filter";
+export * from "./query";
