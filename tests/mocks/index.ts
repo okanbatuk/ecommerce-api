@@ -1,1 +1,1 @@
-export * from "./category-repository.mock";
+export * from "./category-repository";
