@@ -1,5 +1,5 @@
 import { TYPES } from "@/shared";
-import { BaseRepository } from "@/shared/repositories/base.repository";
+import { BaseRepository } from "@/shared/core";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { inject, injectable } from "inversify";
 import { prismaCategoryFilter } from "./filters/prisma.filter";

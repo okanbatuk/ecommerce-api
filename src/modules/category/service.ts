@@ -6,7 +6,7 @@ import {
   RES_MSG,
   TYPES,
 } from "@/shared";
-import { BaseService } from "@/shared/services/base.service";
+import { BaseService } from "@/shared/core";
 import { inject, injectable } from "inversify";
 import { CategoryMapper } from "./mapper";
 import { buildCategorySlug, normalizeUpdateFields } from "./utils";

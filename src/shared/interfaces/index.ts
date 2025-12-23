@@ -1,3 +1,5 @@
 export * from "./readable-service";
-export * from "./writable-service";
-export * from "./soft-deletable-service";
+export * from "./creatable-service";
+export * from "./updatable-service";
+export * from "./deletable-service";
+export * from "./restorable-service";
