@@ -42,9 +42,10 @@ export class CategoryService
     return category;
   }
 
-  private async isSlugUnique(slug: string) {
+  private async isSlugUnique(slug: string, id?: number) {
     const exists = await this.categoryRepository.findBySlug(slug);
-    if (exists) throw new ConflictError(RES_MSG.DUPLICATE("Category slug"));
+    if (exists && exists.id !== id)
+      throw new ConflictError(RES_MSG.DUPLICATE("Category slug"));
   }
 
   private ensureVisible(
@@ -161,7 +162,7 @@ export class CategoryService
         parentSlug,
       );
       if (slug) updateData.slug = slug;
-      await this.isSlugUnique(slug);
+      await this.isSlugUnique(slug, id);
     }
     const updated = await this.categoryRepository.update(id, updateData);
 

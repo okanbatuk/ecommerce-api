@@ -1,7 +1,7 @@
 import { CategoryService } from "@/modules/category/service";
 import { ConflictError, NotFoundError } from "@/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockCategoryRepository } from "../../mocks";
+import { MockCategoryRepository } from "../../mocks";
 
 import type { ICategoryRepository } from "@/modules/category/interfaces/repository";
 import type { ICategoryService } from "@/modules/category/interfaces/service";
@@ -11,7 +11,7 @@ describe("Category Service", () => {
   let service: ICategoryService;
 
   beforeEach(() => {
-    repo = mockCategoryRepository();
+    repo = new MockCategoryRepository();
     service = new CategoryService(repo);
   });
 
@@ -190,7 +190,7 @@ describe("Category Service", () => {
       });
 
       expect(result.name).toBe("Electronic & Tech");
-      expect(result.slug).toContain("electronic");
+      expect(result.slug).toContain("electronic-tech");
     });
 
     it("should throw NotFoundError when updating non-existing category", async () => {

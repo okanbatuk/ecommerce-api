@@ -1,5 +1,6 @@
-import { Role, sendReply } from "@/shared";
+import { Role } from "@/shared";
 import { BaseController } from "@/shared/core/base.controller";
+import { sendReply } from "@/shared/utils";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { baseServiceMock } from "../mocks";
