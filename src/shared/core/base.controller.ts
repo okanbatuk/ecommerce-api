@@ -3,19 +3,13 @@ import { injectable } from "inversify";
 import { RES_MSG } from "../constants";
 import { sendReply } from "../utils";
 
-import { ResponseCode, type Pagination } from "../types";
+import type { IDeletable, IReadable } from "../interfaces";
+import { ResponseCode, type FindOptions, type Pagination } from "../types";
 
 @injectable()
-export abstract class BaseController {
+export abstract class BaseController<TDto> {
   constructor(
-    protected readonly service: {
-      findById: Function;
-      findMany: Function;
-      findAll?: Function;
-      create?: Function;
-      update?: Function;
-      delete: Function;
-    },
+    protected readonly service: IReadable<unknown, TDto> & IDeletable,
   ) {}
 
   protected resolvePagination(query: any): Required<Pagination> {
@@ -25,7 +19,11 @@ export abstract class BaseController {
     };
   }
 
-  protected buildFilter(query: any) {
+  protected resolveFindOptions(_req: FastifyRequest): FindOptions {
+    return {};
+  }
+
+  protected buildFilter(query: any): Record<string, unknown> {
     const { limit, offset, ...rest } = query;
     return Object.fromEntries(
       Object.entries(rest).filter(([, v]) => v !== undefined),
@@ -36,8 +34,8 @@ export abstract class BaseController {
     return label || this.constructor.name.replace("Controller", "");
   }
 
-  protected ok(reply: FastifyReply, data: any | any[], label?: string) {
-    return sendReply(
+  protected ok(reply: FastifyReply, data: any | any[], label?: string): void {
+    sendReply(
       reply,
       200,
       ResponseCode.OK,
@@ -48,8 +46,8 @@ export abstract class BaseController {
     );
   }
 
-  protected created(reply: FastifyReply, data: any, label?: string) {
-    return sendReply(
+  protected created(reply: FastifyReply, data: any, label?: string): void {
+    sendReply(
       reply,
       200,
       ResponseCode.CREATED,
@@ -58,8 +56,8 @@ export abstract class BaseController {
     );
   }
 
-  protected updated(reply: FastifyReply, label?: string) {
-    return sendReply(
+  protected updated(reply: FastifyReply, label?: string): void {
+    sendReply(
       reply,
       200,
       ResponseCode.OK,
@@ -68,8 +66,8 @@ export abstract class BaseController {
     );
   }
 
-  protected noContent(reply: FastifyReply, label?: string) {
-    return sendReply(
+  protected noContent(reply: FastifyReply, label?: string): void {
+    sendReply(
       reply,
       200,
       ResponseCode.NO_CONTENT,
@@ -82,24 +80,26 @@ export abstract class BaseController {
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
   ) => {
-    const entity = await this.service.findById(Number(req.params.id));
-    return this.ok(reply, entity);
+    const entity = await this.service.findById(
+      Number(req.params.id),
+      this.resolveFindOptions(req),
+    );
+    this.ok(reply, entity);
   };
 
-  search = async (
-    req: FastifyRequest<{ Querystring: any }>,
-    reply: FastifyReply,
-  ) => {
-    const filter = this.buildFilter(req.query);
-    const result = await this.service.findMany(filter);
-    return this.ok(reply, result);
-  };
-
-  remove = async (
+  delete = async (
     req: FastifyRequest<{ Params: { id: string } }>,
     reply: FastifyReply,
   ) => {
     await this.service.delete(Number(req.params.id));
-    return this.noContent(reply, RES_MSG.DELETED("Entity"));
+    this.noContent(reply, RES_MSG.DELETED("Entity"));
+  };
+
+  deletePermanently = async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply,
+  ) => {
+    await this.service.deletePermanently(Number(req.params.id));
+    this.noContent(reply, RES_MSG.DELETED("Entity"));
   };
 }
