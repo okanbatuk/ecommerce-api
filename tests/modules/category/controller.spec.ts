@@ -52,6 +52,22 @@ describe("CategoryController", () => {
     };
   });
 
+  describe("getById", () => {
+    it("should call service.findById and call ok", async () => {
+      const okSpy = vi.spyOn(ctrl as any, "ok");
+
+      reqAdmin.params = { id: "1" };
+
+      await ctrl.getById(reqAdmin as any, reply as any);
+
+      expect(categoryServiceMock.findById).toHaveBeenCalledWith(1, {
+        includeDeleted: true,
+      });
+
+      expect(okSpy).toHaveBeenCalledWith(reply, mockCategoryDto, "Category");
+    });
+  });
+
   describe("getBySlug", () => {
     it("should call service.findBySlug and sendReply", async () => {
       reqAdmin = { ...reqAdmin, params: { slug: "electronic" } };
@@ -71,7 +87,7 @@ describe("CategoryController", () => {
 
   describe("search", () => {
     it("should call service.findMany and sendReply", async () => {
-      reqAdmin = { query: {} };
+      reqAdmin.query = {};
       const okSpy = vi.spyOn(ctrl as any, "ok");
       await ctrl.search(reqAdmin as any, reply as any);
 
@@ -82,12 +98,14 @@ describe("CategoryController", () => {
 
   describe("getChildren", () => {
     it("should call service.findChildren and sendReply", async () => {
-      reqAdmin = { params: { id: "1" } };
+      reqAdmin.params = { id: "1" };
       const okSpy = vi.spyOn(ctrl as any, "ok");
 
       await ctrl.getChildren(reqAdmin as any, reply as any);
 
-      expect(categoryServiceMock.findChildren).toHaveBeenCalledWith(1);
+      expect(categoryServiceMock.findChildren).toHaveBeenCalledWith(1, {
+        includeDeleted: true,
+      });
 
       expect(okSpy).toHaveBeenCalledWith(reply, [mockCategoryDto], "Category");
     });
@@ -150,6 +168,20 @@ describe("CategoryController", () => {
     });
   });
 
+  describe("delete", () => {
+    it("should delete category and call noContent", async () => {
+      const noContentSpy = vi.spyOn(ctrl as any, "noContent");
+
+      reqAdmin.params = { id: "1" };
+
+      await ctrl.delete(reqAdmin as any, reply as any);
+
+      expect(categoryServiceMock.delete).toHaveBeenCalledWith(1);
+
+      expect(noContentSpy).toHaveBeenCalledWith(reply, "Category");
+    });
+  });
+
   describe("restore", () => {
     it("should restore category and call ok", async () => {
       const okSpy = vi.spyOn(ctrl as any, "ok");
@@ -161,6 +193,20 @@ describe("CategoryController", () => {
       expect(categoryServiceMock.restore).toHaveBeenCalledWith(1);
 
       expect(okSpy).toHaveBeenCalledWith(reply, mockCategoryDto, "Category");
+    });
+  });
+
+  describe("deletePermanently", () => {
+    it("should permanently delete category and call ok", async () => {
+      const noContentSpy = vi.spyOn(ctrl as any, "noContent");
+
+      reqAdmin.params = { id: "1" };
+
+      await ctrl.deletePermanently(reqAdmin as any, reply as any);
+
+      expect(categoryServiceMock.deletePermanently).toHaveBeenCalledWith(1);
+
+      expect(noContentSpy).toHaveBeenCalledWith(reply, "Category");
     });
   });
 });

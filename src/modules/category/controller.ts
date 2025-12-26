@@ -67,6 +67,20 @@ export class CategoryController extends BaseController<CategoryDto> {
   };
 
   /**
+   * GET /categories/:id
+   */
+  getById = async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    res: FastifyReply,
+  ): Promise<void> => {
+    const category = await this.categoryService.findById(
+      Number(req.params.id),
+      this.resolveFindOptions(req),
+    );
+    this.ok(res, category, "Category");
+  };
+
+  /**
    * GET /categories/roots
    */
   getRoots = async (req: FastifyRequest, reply: FastifyReply) => {
@@ -129,5 +143,29 @@ export class CategoryController extends BaseController<CategoryDto> {
     const restored = await this.categoryService.restore(Number(req.params.id));
 
     this.ok(reply, restored, "Category");
+  };
+
+  /**
+   * DELETE /categories/:id
+   */
+  delete = async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply,
+  ) => {
+    await this.categoryService.delete(Number(req.params.id));
+
+    this.noContent(reply, "Category");
+  };
+
+  /**
+   * DELETE /categories/:id/force
+   */
+  deletePermanently = async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply,
+  ) => {
+    await this.categoryService.deletePermanently(Number(req.params.id));
+
+    this.noContent(reply, "Category");
   };
 }
