@@ -46,6 +46,12 @@ export default fp(async (fastify: FastifyInstance) => {
     },
   );
 
+  fastify.decorate("optionalAuth", async (req: FastifyRequest) => {
+    try {
+      await req.jwtVerify<JwtPayload>();
+    } catch (err) {}
+  });
+
   fastify.decorate(
     "assertOwnUser",
     async (

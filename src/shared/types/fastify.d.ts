@@ -24,6 +24,8 @@ declare module "fastify" {
       reply: FastifyReply,
     ) => Promise<void>;
 
+    optionalAuth: typeof fastify.authenticate;
+
     assertOwnUser: <T extends FastifyRequest<{ Params: { id: string } }>>(
       req: T,
       reply: FastifyReply,
